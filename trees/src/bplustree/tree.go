@@ -72,10 +72,10 @@ func (t *BPlusTree) Insert(key int) error {
 
 	// Handle the case where the leaf node is full
 	if len(leaf.Keys) >= order {
-		newNode, pk := SplitLeafNode(leaf)
-		root := InsertIntoParent(leaf, newNode, pk)
-		if root != nil {
-			t.Root = root
+		newNode, pk := leaf.SplitNode()
+		newRoot := leaf.InsertIntoParent(newNode, pk)
+		if newRoot != nil {
+			t.Root = newRoot
 		}
 	}
 
@@ -90,14 +90,25 @@ func PrintTree(node *Node, level int) {
 
 	indent := ""
 	for range level {
-		indent += "  "
+		indent += "\t"
 	}
 
 	fmt.Printf("%sNode(", indent)
 	if node.IsLeaf {
-		fmt.Printf("Leaf): Keys: %v parent: %v\n", node.Keys, node.Parent)
+		fmt.Printf("Leaf): Keys: %v", node.Keys)
+		if node.Parent != nil {
+			fmt.Printf(", parent: %v", node.Parent.Keys)
+		}
+		if node.Next != nil {
+			fmt.Printf(", next: %v", node.Next.Keys)
+		}
+		fmt.Println()
 	} else {
-		fmt.Printf("Internal): Keys: %v parent: %v\n", node.Keys, node.Parent)
+		fmt.Printf("Internal): Keys: %v", node.Keys)
+		if node.Parent != nil {
+			fmt.Printf(", parent: %v", node.Parent.Keys)
+		}
+		fmt.Println()
 		for _, child := range node.Children {
 			PrintTree(child, level+1)
 		}

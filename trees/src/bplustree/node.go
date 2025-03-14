@@ -28,12 +28,15 @@ func NewNode(isLeaf bool) *Node {
 	}
 }
 
-// SplitLeafNode splits a leaf node that has reached maximum capacity
-func SplitLeafNode(node *Node) (newRightNode *Node, promotedKey int) {
-	if !node.IsLeaf {
-		panic("Can't use SplitLeafNode on an internal node")
+func (node *Node) SplitNode() (newRightNode *Node, promotedKey int) {
+	if node.IsLeaf {
+		return splitLeafNode(node)
 	}
+	return splitInternalNode(node)
+}
 
+// SplitLeafNode splits a leaf node that has reached maximum capacity
+func splitLeafNode(node *Node) (newRightNode *Node, promotedKey int) {
 	// Create a new leaf node
 	// NOTE: 这里不设置 Parent, 因为 node 可能是 root 节点, 没有 Parent. Parent 设置放在后面.
 	rightNode := NewNode(true)
@@ -58,11 +61,7 @@ func SplitLeafNode(node *Node) (newRightNode *Node, promotedKey int) {
 }
 
 // SplitInternalNode splits an internal node that has reached maximum capacity
-func SplitInternalNode(node *Node) (newRightNode *Node, promotedKey int) {
-	if node.IsLeaf {
-		panic("Can't use SplitInternalNode on a leaf node")
-	}
-
+func splitInternalNode(node *Node) (newRightNode *Node, promotedKey int) {
 	// Create a new internal node
 	// NOTE: 这里不设置 Parent, 因为 node 可能是 root 节点, 没有 Parent. Parent 设置放在后面.
 	rightNode := NewNode(false)
@@ -97,12 +96,16 @@ func SplitInternalNode(node *Node) (newRightNode *Node, promotedKey int) {
 	return rightNode, promotedKey
 }
 
+func (node *Node) InsertIntoParent(newRightNode *Node, insertKey int) (newRoot *Node) {
+	return insertIntoParent(node, newRightNode, insertKey)
+}
+
 // InsertIntoParent inserts a key and node into the parent node
-func InsertIntoParent(oldLeftNode, newRightNode *Node, key int) *Node {
+func insertIntoParent(oldLeftNode, newRightNode *Node, promotedKey int) (newRoot *Node) {
 	// If the node is the root, create a new root
 	if oldLeftNode.Parent == nil {
 		newRoot := NewNode(false)
-		newRoot.Keys = append(newRoot.Keys, key)
+		newRoot.Keys = append(newRoot.Keys, promotedKey)
 		newRoot.Children = append(newRoot.Children, oldLeftNode, newRightNode)
 		oldLeftNode.Parent = newRoot
 		newRightNode.Parent = newRoot
@@ -113,7 +116,7 @@ func InsertIntoParent(oldLeftNode, newRightNode *Node, key int) *Node {
 	oldParent := oldLeftNode.Parent
 
 	// append Key & sort Key
-	oldParent.Keys = append(oldParent.Keys, key)
+	oldParent.Keys = append(oldParent.Keys, promotedKey)
 	slices.Sort(oldParent.Keys)
 
 	// append Children & sort Children
@@ -128,8 +131,8 @@ func InsertIntoParent(oldLeftNode, newRightNode *Node, key int) *Node {
 
 	// If the parent has too many keys, split it
 	if len(oldParent.Keys) >= order {
-		newParent, promotedKey := SplitInternalNode(oldParent)
-		return InsertIntoParent(oldParent, newParent, promotedKey)
+		newParent, promotedKey := oldParent.SplitNode()
+		return oldParent.InsertIntoParent(newParent, promotedKey)
 	}
 
 	return nil // No new root, insert finished
