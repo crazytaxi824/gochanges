@@ -25,7 +25,7 @@ func TestDeleteRef(t *testing.T) {
 	time.Sleep(time.Second)
 }
 
-func TestClone(t *testing.T) {
+func TestCloneCap(t *testing.T) {
 	s := make([]int, 0, 5)
 	d := []int{1, 2, 3}
 
