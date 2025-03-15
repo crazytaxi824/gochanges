@@ -51,24 +51,24 @@ func (t *RBTree) search(x *Node, key int) *Node {
 // Insert adds a new node with the given key and value
 func (t *RBTree) Insert(key int, value any) {
 	// Create new node
-	z := &Node{
+	newNode := &Node{
 		Key:    key,
 		Value:  value,
-		Color:  RED,
+		Color:  RED, // 插入节点一开始是红色, 如果有冲突则 fixup 时修改颜色.
 		Left:   t.NIL,
 		Right:  t.NIL,
 		Parent: nil,
 	}
 
-	y := t.NIL
+	newNodeParent := t.NIL
 	x := t.Root
 
-	// Find position for new node
+	// Find position for new node from root node.
 	for x != t.NIL {
-		y = x
-		if z.Key < x.Key {
+		newNodeParent = x
+		if newNode.Key < x.Key {
 			x = x.Left
-		} else if z.Key > x.Key {
+		} else if newNode.Key > x.Key {
 			x = x.Right
 		} else {
 			// Key already exists, update value and return
@@ -77,63 +77,84 @@ func (t *RBTree) Insert(key int, value any) {
 		}
 	}
 
-	// Set parent of z
-	z.Parent = y
+	// Set parent of new node
+	// 如果新插入的 node 是 root, 则 root 的 parent 也是 nil.
+	newNode.Parent = newNodeParent
 
 	// Insert node
-	if y == t.NIL {
-		t.Root = z
-	} else if z.Key < y.Key {
-		y.Left = z
+	if newNodeParent == t.NIL {
+		t.Root = newNode
+	} else if newNode.Key < newNodeParent.Key {
+		newNodeParent.Left = newNode
 	} else {
-		y.Right = z
+		newNodeParent.Right = newNode
 	}
 
 	// Fix violations
-	t.insertFixup(z)
+	t.insertFixup(newNode)
 }
 
 // insertFixup fixes violations of red-black tree properties after insertion
-func (t *RBTree) insertFixup(z *Node) {
-	for z.Parent != t.NIL && z.Parent.Color == RED {
-		if z.Parent == z.Parent.Parent.Left {
-			y := z.Parent.Parent.Right
-			if y != t.NIL && y.Color == RED {
+func (t *RBTree) insertFixup(newNode *Node) {
+	// newNode is not root && newNode Parent is RED
+	for newNode.Parent != t.NIL && newNode.Parent.Color == RED {
+		if newNode.Parent == newNode.Parent.Parent.Left {
+			// newNode Parent is LEFT && newNode Parent is RED
+			uncle := newNode.Parent.Parent.Right
+			if uncle != t.NIL && uncle.Color == RED {
 				// Case 1: Uncle is red
-				z.Parent.Color = BLACK
-				y.Color = BLACK
-				z.Parent.Parent.Color = RED
-				z = z.Parent.Parent
+				newNode.Parent.Color = BLACK      // change Parent to BLACK
+				uncle.Color = BLACK               // change Uncle to BLACK
+				newNode.Parent.Parent.Color = RED // change Grandparent to RED
+				newNode = newNode.Parent.Parent   // set Grandparent as a new node
 			} else {
-				if z == z.Parent.Right {
-					// Case 2: Uncle is black, z is right child
-					z = z.Parent
-					t.leftRotate(z)
+				// Case 2: Uncle is NIL or BLACK
+				if newNode == newNode.Parent.Right {
+					// newNode is right child - inner grandchild
+					//      Grandparent
+					//        /     \
+					//   Parent
+					//    /   \
+					//       NewNode
+					// newNode is Grandparent's "inner grandchild"
+					// perform Left-Rotation on Parent Node, then
+					// perform Right-Rotation on Grandparent Node in Case 3.
+					newNode = newNode.Parent
+					t.leftRotate(newNode)
 				}
-				// Case 3: Uncle is black, z is left child
-				z.Parent.Color = BLACK
-				z.Parent.Parent.Color = RED
-				t.rightRotate(z.Parent.Parent)
+				// Case 3: Uncle is BLACK, newNode is left child - outer grandchild
+				newNode.Parent.Color = BLACK         // change Parent to BLACK
+				newNode.Parent.Parent.Color = RED    // change Grandparent to BLACK
+				t.rightRotate(newNode.Parent.Parent) // perform Right-Rotation on Grandparent Node
 			}
 		} else {
 			// Same cases but mirrored
-			y := z.Parent.Parent.Left
-			if y != t.NIL && y.Color == RED {
+			uncle := newNode.Parent.Parent.Left
+			if uncle != t.NIL && uncle.Color == RED {
 				// Case 1: Uncle is red
-				z.Parent.Color = BLACK
-				y.Color = BLACK
-				z.Parent.Parent.Color = RED
-				z = z.Parent.Parent
+				newNode.Parent.Color = BLACK
+				uncle.Color = BLACK
+				newNode.Parent.Parent.Color = RED
+				newNode = newNode.Parent.Parent
 			} else {
-				if z == z.Parent.Left {
-					// Case 2: Uncle is black, z is left child
-					z = z.Parent
-					t.rightRotate(z)
+				if newNode == newNode.Parent.Left {
+					// Case 2: Uncle is black, newNode is left child - inner grandchild
+					// newNode is right child - inner grandchild
+					//      Grandparent
+					//        /     \
+					//             Parent
+					//             /   \
+					//        NewNode
+					// newNode is Grandparent's "inner grandchild"
+					// perform Right-Rotation on Parent Node, then
+					// perform Left-Rotation on Grandparent Node in Case 3.
+					newNode = newNode.Parent
+					t.rightRotate(newNode)
 				}
-				// Case 3: Uncle is black, z is right child
-				z.Parent.Color = BLACK
-				z.Parent.Parent.Color = RED
-				t.leftRotate(z.Parent.Parent)
+				// Case 3: Uncle is black, newNode is right child - outer grandchild
+				newNode.Parent.Color = BLACK
+				newNode.Parent.Parent.Color = RED
+				t.leftRotate(newNode.Parent.Parent)
 			}
 		}
 	}
