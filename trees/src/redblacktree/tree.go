@@ -168,10 +168,12 @@ func (t *RBTree) Delete(key int) {
 		return
 	}
 
-	t.delete(z)
+	// 以下两种删除方式都可以
+	// t.deleteWithPredecessor(z)
+	t.deleteWithSuccessor(z)
 }
 
-func (t *RBTree) delete(delNode *Node) {
+func (t *RBTree) deleteWithSuccessor(delNode *Node) {
 	successor := delNode
 	yOriginalColor := successor.Color
 	var x *Node
@@ -193,7 +195,7 @@ func (t *RBTree) delete(delNode *Node) {
 		x = successor.Right
 
 		if successor.Parent == delNode {
-			// case: 后继节点是 delNode 的 right child
+			// case: successor 是 delNode 的 child
 			//  delNode
 			//   /   \
 			//  A   successor
@@ -202,7 +204,7 @@ func (t *RBTree) delete(delNode *Node) {
 			// 'x' could be NIL.
 			x.Parent = successor
 		} else {
-			// case: 后继节点不是 delNode 的 right child
+			// case: successor 是 delNode 右子树中最小的节点
 			//    delNode
 			//     /   \
 			//    A     B
@@ -235,6 +237,46 @@ func (t *RBTree) delete(delNode *Node) {
 		//      successor
 		//       /    \
 		//      A      ...
+	}
+
+	if yOriginalColor == BLACK {
+		t.deleteFixup(x)
+	}
+}
+
+func (t *RBTree) deleteWithPredecessor(delNode *Node) {
+	predecessor := delNode
+	yOriginalColor := predecessor.Color
+	var x *Node
+
+	if delNode.Left == t.NIL {
+		// Case 1: delNode has no child OR no left child
+		x = delNode.Right
+		t.transplant(delNode, delNode.Right) // replace with right child
+	} else if delNode.Right == t.NIL {
+		// Case 2: delNode has no right child
+		x = delNode.Left
+		t.transplant(delNode, delNode.Left) // replace with left child
+	} else {
+		// Case 3: delNode has two children
+		// 找到前驱节点 predecessor 代替, 即:左子树中最大的节点, 后继节点没有 right child.
+		predecessor = t.maximumNode(delNode.Left)
+		yOriginalColor = predecessor.Color
+		x = predecessor.Right
+
+		if predecessor.Parent == delNode {
+			// case: predecessor 是 delNode 的 child
+			x.Parent = predecessor
+		} else {
+			// case: predecessor 是 delNode 的左子树中最大的节点.
+			t.transplant(predecessor, predecessor.Left)
+			predecessor.Left = delNode.Left
+			predecessor.Left.Parent = predecessor
+		}
+		t.transplant(delNode, predecessor)
+		predecessor.Right = delNode.Right
+		predecessor.Right.Parent = predecessor
+		predecessor.Color = delNode.Color
 	}
 
 	if yOriginalColor == BLACK {
