@@ -171,37 +171,70 @@ func (t *RBTree) Delete(key int) {
 	t.delete(z)
 }
 
-func (t *RBTree) delete(z *Node) {
-	y := z
-	yOriginalColor := y.Color
+func (t *RBTree) delete(delNode *Node) {
+	successor := delNode
+	yOriginalColor := successor.Color
 	var x *Node
 
-	if z.Left == t.NIL {
-		// Case 1: z has no left child
-		x = z.Right
-		t.transplant(z, z.Right)
-	} else if z.Right == t.NIL {
-		// Case 2: z has no right child
-		x = z.Left
-		t.transplant(z, z.Left)
+	if delNode.Left == t.NIL {
+		// Case 1: delNode has no child OR no left child
+		x = delNode.Right
+		t.transplant(delNode, delNode.Right) // replace with right child
+	} else if delNode.Right == t.NIL {
+		// Case 2: delNode has no right child
+		x = delNode.Left
+		t.transplant(delNode, delNode.Left) // replace with left child
 	} else {
-		// Case 3: z has two children
-		y = t.minimum(z.Right)
-		yOriginalColor = y.Color
-		x = y.Right
+		// Case 3: delNode has two children
+		// 找到后继节点 successor 代替, 即:右子树中最小的节点, 后继节点没有 left child.
+		// 也可以用前驱节点 predecessor 代替, 即:左子树中最大的节点. 但通常使用后继节点代替.
+		successor = t.minimumNode(delNode.Right)
+		yOriginalColor = successor.Color
+		x = successor.Right
 
-		if y.Parent == z {
-			x.Parent = y
+		if successor.Parent == delNode {
+			// case: 后继节点是 delNode 的 right child
+			//  delNode
+			//   /   \
+			//  A   successor
+			//       /    \
+			//      NIL    x
+			// 'x' could be NIL.
+			x.Parent = successor
 		} else {
-			t.transplant(y, y.Right)
-			y.Right = z.Right
-			y.Right.Parent = y
+			// case: 后继节点不是 delNode 的 right child
+			//    delNode
+			//     /   \
+			//    A     B
+			//        /   \
+			// successor   ...
+			//   /   \
+			// NIL    x
+			// successor.Right could be NIL.
+
+			// x -> successor
+			t.transplant(successor, successor.Right)
+			// successor.Right <-> B
+			successor.Right = delNode.Right
+			successor.Right.Parent = successor
+			// 结果:
+			//      successor
+			//       /    \
+			//    ...      B
+			//           /   \
+			//          x     ...
 		}
 
-		t.transplant(z, y)
-		y.Left = z.Left
-		y.Left.Parent = y
-		y.Color = z.Color
+		// successor -> delNode
+		t.transplant(delNode, successor)
+		// successor.Left <-> A
+		successor.Left = delNode.Left
+		successor.Left.Parent = successor
+		successor.Color = delNode.Color
+		// 结果:
+		//      successor
+		//       /    \
+		//      A      ...
 	}
 
 	if yOriginalColor == BLACK {
@@ -212,36 +245,37 @@ func (t *RBTree) delete(z *Node) {
 // deleteFixup fixes violations of red-black tree properties after deletion
 func (t *RBTree) deleteFixup(x *Node) {
 	for x != t.Root && x.Color == BLACK {
-		if x == x.Parent.Left { // x is left side
-			w := x.Parent.Right
-			if w.Color == RED {
+		if x == x.Parent.Left {
+			// x is left side
+			sibling := x.Parent.Right
+			if sibling.Color == RED {
 				// Case 1: x's sibling w is RED
-				w.Color = BLACK
+				sibling.Color = BLACK
 				x.Parent.Color = RED
-				t.leftRotate(x.Parent)
-				w = x.Parent.Right
+				t.leftRotate(x.Parent) // x is left perform Left-Rotation; x is right perform Right-Rotation
+				sibling = x.Parent.Right
 			}
-			if w.Left.Color == BLACK && w.Right.Color == BLACK {
+			if sibling.Left.Color == BLACK && sibling.Right.Color == BLACK {
 				// Case 2: Both of w's children are BLACK
-				w.Color = RED
-				x = x.Parent
+				sibling.Color = RED
+				x = x.Parent // x -> x.Parent
 			} else {
-				if w.Right.Color == BLACK {
-					// Case 3: w's right child is BLACK
-					w.Left.Color = BLACK
-					w.Color = RED
-					t.rightRotate(w)
-					w = x.Parent.Right
+				if sibling.Right.Color == BLACK {
+					// Case 3: w's right child is BLACK, outer child is BLACK, inner child is RED
+					sibling.Left.Color = BLACK
+					sibling.Color = RED
+					t.rightRotate(sibling)
+					sibling = x.Parent.Right
 				}
-				// Case 4: w's right child is RED
-				w.Color = x.Parent.Color
+				// Case 4: w's right child is RED, outer child is RED, inner child is BLACK
+				sibling.Color = x.Parent.Color
 				x.Parent.Color = BLACK
-				w.Right.Color = BLACK
-				t.leftRotate(x.Parent)
+				sibling.Right.Color = BLACK
+				t.leftRotate(x.Parent) // x is left perform Left-Rotation; x is right perform Right-Rotation
 				x = t.Root
 			}
-		} else { // x is right side
-			// Same cases but mirrored
+		} else {
+			// x is right side, Same cases but mirrored
 			w := x.Parent.Left
 			if w.Color == RED {
 				// Case 1: x's sibling w is RED
@@ -320,22 +354,36 @@ func (t *RBTree) rightRotate(y *Node) {
 	y.Parent = x
 }
 
-// transplant replaces one subtree with another
+// replaces one subtree 'u' with another 'v'
 func (t *RBTree) transplant(u, v *Node) {
 	if u.Parent == t.NIL {
+		// u is Root
 		t.Root = v
 	} else if u == u.Parent.Left {
+		// u is LEFT
 		u.Parent.Left = v
 	} else {
+		// u is RIGHT
 		u.Parent.Right = v
 	}
 	v.Parent = u.Parent
 }
 
-// minimum finds the node with minimum key in the subtree rooted at x
-func (t *RBTree) minimum(x *Node) *Node {
+// minimumNode finds the node with minimumNode key in the subtree rooted at x
+// search for successor
+func (t *RBTree) minimumNode(x *Node) *Node {
+	// left child < parent < right child
 	for x.Left != t.NIL {
 		x = x.Left
+	}
+	return x
+}
+
+// search for predecessor
+func (t *RBTree) maximumNode(x *Node) *Node {
+	// left child < parent < right child
+	for x.Right != t.NIL {
+		x = x.Right
 	}
 	return x
 }
