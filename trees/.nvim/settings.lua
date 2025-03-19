@@ -2,7 +2,10 @@
 return {
   lsp = {
     --- https://github.com/golang/tools/blob/master/gopls/doc/settings.md
-    gopls = { usePlaceholders = false },
+    gopls = {
+      semanticTokens = true,  -- 默认 false.
+      usePlaceholders = false,
+    },
     -- gopls = { ["ui.completion.usePlaceholders"] = true },  --- 两种写法都成立
   },
   -- linter = {

@@ -174,25 +174,24 @@ func (t *RBTree) Delete(key int) {
 }
 
 func (t *RBTree) deleteWithSuccessor(delNode *Node) {
-	successor := delNode
-	yOriginalColor := successor.Color
-	var x *Node
+	var replacement *Node
+	originalColor := delNode.Color
 
 	if delNode.Left == t.NIL {
 		// Case 1: delNode has no child OR no left child
-		x = delNode.Right
+		replacement = delNode.Right
 		t.transplant(delNode, delNode.Right) // replace with right child
 	} else if delNode.Right == t.NIL {
 		// Case 2: delNode has no right child
-		x = delNode.Left
+		replacement = delNode.Left
 		t.transplant(delNode, delNode.Left) // replace with left child
 	} else {
 		// Case 3: delNode has two children
 		// 找到后继节点 successor 代替, 即:右子树中最小的节点, 后继节点没有 left child.
 		// 也可以用前驱节点 predecessor 代替, 即:左子树中最大的节点. 但通常使用后继节点代替.
-		successor = t.minimumNode(delNode.Right)
-		yOriginalColor = successor.Color
-		x = successor.Right
+		successor := t.minimumNode(delNode.Right)
+		originalColor = successor.Color
+		replacement = successor.Right
 
 		if successor.Parent == delNode {
 			// case: successor 是 delNode 的 child
@@ -202,7 +201,7 @@ func (t *RBTree) deleteWithSuccessor(delNode *Node) {
 			//       /    \
 			//      NIL    x
 			// 'x' could be NIL.
-			x.Parent = successor
+			replacement.Parent = successor
 		} else {
 			// case: successor 是 delNode 右子树中最小的节点
 			//    delNode
@@ -239,34 +238,33 @@ func (t *RBTree) deleteWithSuccessor(delNode *Node) {
 		//      A      ...
 	}
 
-	if yOriginalColor == BLACK {
-		t.deleteFixup(x)
+	if originalColor == BLACK {
+		t.deleteFixup(replacement)
 	}
 }
 
 func (t *RBTree) deleteWithPredecessor(delNode *Node) {
-	predecessor := delNode
-	yOriginalColor := predecessor.Color
-	var x *Node
+	var replacement *Node
+	originalColor := delNode.Color
 
 	if delNode.Left == t.NIL {
 		// Case 1: delNode has no child OR no left child
-		x = delNode.Right
+		replacement = delNode.Right
 		t.transplant(delNode, delNode.Right) // replace with right child
 	} else if delNode.Right == t.NIL {
 		// Case 2: delNode has no right child
-		x = delNode.Left
+		replacement = delNode.Left
 		t.transplant(delNode, delNode.Left) // replace with left child
 	} else {
 		// Case 3: delNode has two children
 		// 找到前驱节点 predecessor 代替, 即:左子树中最大的节点, 后继节点没有 right child.
-		predecessor = t.maximumNode(delNode.Left)
-		yOriginalColor = predecessor.Color
-		x = predecessor.Right
+		predecessor := t.maximumNode(delNode.Left)
+		originalColor = predecessor.Color
+		replacement = predecessor.Right
 
 		if predecessor.Parent == delNode {
 			// case: predecessor 是 delNode 的 child
-			x.Parent = predecessor
+			replacement.Parent = predecessor
 		} else {
 			// case: predecessor 是 delNode 的左子树中最大的节点.
 			t.transplant(predecessor, predecessor.Left)
@@ -279,8 +277,8 @@ func (t *RBTree) deleteWithPredecessor(delNode *Node) {
 		predecessor.Color = delNode.Color
 	}
 
-	if yOriginalColor == BLACK {
-		t.deleteFixup(x)
+	if originalColor == BLACK {
+		t.deleteFixup(replacement)
 	}
 }
 
