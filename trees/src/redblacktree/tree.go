@@ -238,6 +238,7 @@ func (t *RBTree) deleteWithSuccessor(delNode *Node) {
 		//      A      ...
 	}
 
+	// Fix red-black properties if we removed a black node
 	if originalColor == BLACK {
 		t.deleteFixup(replacement)
 	}
