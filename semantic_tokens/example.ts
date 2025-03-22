@@ -5,6 +5,7 @@ interface User {
   age?: number;
   isActive: boolean;
 }
+const user: User = { id: 101, name: 'John', age: 30, isActive: true }; // Example User object
 
 // 枚举类型
 enum Role {
@@ -14,6 +15,8 @@ enum Role {
 }
 
 type Foo = null | undefined;
+let myFoo: Foo = null; // or `undefined`
+console.log(myFoo);
 
 // 泛型类
 class DataStore<T> {
@@ -75,10 +78,12 @@ async function fetchUserData(userId: number): Promise<User> {
     throw error;
   }
 }
+fetchUserData(1);
 
 // 类型断言与字面量类型
 type Direction = 'north' | 'south' | 'east' | 'west';
 let currentDirection: Direction = 'north';
+console.log(currentDirection);
 
 // 映射类型与条件类型
 type Readonly<T> = {
@@ -86,14 +91,26 @@ type Readonly<T> = {
 };
 
 type UserReadOnly = Readonly<User>;
+const userReadOnly: UserReadOnly = Object.freeze(user); // Make it readonly
+console.log(userReadOnly);
 
 // 工具类型
 type Nullable<T> = T | null;
 type UserOrNull = Nullable<User>;
+const nullUser: UserOrNull = null;
+console.log(nullUser);
 
 // 类型交叉与联合
 type AdminUser = User & { permissions: string[] };
 type Entity = User | { productId: string; price: number };
+const adminUser: AdminUser = {
+  id: 1,
+  name: 'admin',
+  age: 24,
+  isActive: true,
+  permissions: ['read', 'write'],
+};
+console.log(adminUser);
 
 // 使用类型守卫的函数
 function processEntity(entity: Entity): void {
@@ -103,6 +120,7 @@ function processEntity(entity: Entity): void {
     console.log(`Processing product: ${entity.productId}`);
   }
 }
+processEntity(userReadOnly);
 
 // 与 DOM 交互
 const button = document.getElementById('submit-btn') as HTMLButtonElement;
@@ -124,6 +142,8 @@ namespace Validation {
     }
   }
 }
+let validator = new Validation.EmailValidator();
+console.log(validator.isValid('test@example.com')); // true or false
 
 // 模块导入导出
 export { User, Role, UserService };
@@ -142,3 +162,5 @@ class Dog extends Animal {
     // 此处才能使用 this
   }
 }
+const dog = new Dog('doggy', 'breed');
+console.log(dog);
