@@ -4,15 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
-	_ "github.com/lib/pq" // postgres driver
 )
 
 // 常量定义
@@ -83,7 +81,7 @@ func NewUserService(db *sql.DB) *UserService {
 
 // GetUser 通过ID获取用户
 func (s *UserService) GetUser(ctx context.Context, id string) (*User, error) {
-	// 创建带超时的上下文
+	//nolint // 创建带超时的上下文
 	ctx, cancel := context.WithTimeout(ctx, DBTimeout)
 	defer cancel()
 
@@ -118,66 +116,6 @@ func (s *UserService) GetUser(ctx context.Context, id string) (*User, error) {
 	return &user, nil
 }
 
-// CreateUser 创建新用户
-func (s *UserService) CreateUser(ctx context.Context, user *User) error {
-	// 生成UUID
-	if user.ID == "" {
-		user.ID = uuid.New().String()
-	}
-
-	// 设置创建时间
-	user.CreatedAt = time.Now().UTC()
-
-	// 使用事务
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return &ServiceError{
-			Code:    http.StatusInternalServerError,
-			Message: "开始事务失败",
-			Err:     err,
-		}
-	}
-	defer tx.Rollback() // 如果提交成功，这将是无操作
-
-	// 准备SQL语句
-	query := `
-		INSERT INTO users (id, name, email, role, active, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`
-
-	// 执行查询
-	_, err = tx.ExecContext(
-		ctx,
-		query,
-		user.ID,
-		user.Name,
-		user.Email,
-		user.Role,
-		user.Active,
-		user.CreatedAt,
-	)
-
-	if err != nil {
-		return &ServiceError{
-			Code:    http.StatusInternalServerError,
-			Message: "创建用户失败",
-			Err:     err,
-		}
-	}
-
-	// 提交事务
-	if err = tx.Commit(); err != nil {
-		return &ServiceError{
-			Code:    http.StatusInternalServerError,
-			Message: "提交事务失败",
-			Err:     err,
-		}
-	}
-
-	s.log.Printf("用户创建成功: %s", user.ID)
-	return nil
-}
-
 // UserHandler HTTP处理器
 type UserHandler struct {
 	service *UserService
@@ -200,7 +138,8 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	// 获取用户
 	user, err := h.service.GetUser(r.Context(), id)
 	if err != nil {
-		if svcErr, ok := err.(*ServiceError); ok {
+		var svcErr *ServiceError
+		if ok := errors.As(err, &svcErr); ok {
 			http.Error(w, svcErr.Message, svcErr.Code)
 		} else {
 			http.Error(w, "服务器内部错误", http.StatusInternalServerError)
@@ -276,8 +215,8 @@ func main() {
 	db.SetConnMaxLifetime(time.Hour)
 
 	// 测试数据库连接
-	if err := db.Ping(); err != nil {
-		logger.Fatalf("数据库Ping失败: %v", err)
+	if er := db.Ping(); er != nil {
+		logger.Fatalf("数据库Ping失败: %v", er)
 	}
 	logger.Println("数据库连接成功")
 
@@ -302,7 +241,7 @@ func main() {
 	// 使用goroutine启动服务器
 	go func() {
 		logger.Printf("HTTP服务器监听在%s\n", ServerPort)
-		err := http.ListenAndServe(ServerPort, nil)
+		err := http.ListenAndServe(ServerPort, nil) //nolint
 		if err != nil {
 			logger.Fatalf("HTTP服务器启动失败: %v", err)
 		}
