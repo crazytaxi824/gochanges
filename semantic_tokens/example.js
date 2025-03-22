@@ -1,10 +1,64 @@
-// 变量声明与基本数据类型
-const username = 'alice'; // 字符串字面量
-let age = 28; // 数字字面量
-var isActive = true; // 布尔字面量
-const PI = 3.14159; // 常量
-let nullValue = null; // null值
-let undefinedValue; // undefined值
+// Variables and constants
+const PI = 3.14; // constant
+let radius = 5; // variable
+
+// Functions
+function calculateArea(r) {
+  // Parameters and return
+  return PI * r * r; // function call, constant, parameter
+}
+
+// Classes and methods
+class Circle {
+  constructor(radius) {
+    this.radius = radius; // property
+  }
+
+  getArea() {
+    return calculateArea(this.radius); // method call, property
+  }
+}
+
+// Objects and properties
+const myCircle = new Circle(radius); // object instantiation
+console.log('Area:', myCircle.getArea()); // console, method call
+
+// Control flow
+if (radius > 0) {
+  // condition
+  console.log('Valid radius'); // console
+} else {
+  console.error('Invalid radius'); // console
+}
+
+// Loops
+for (let i = 0; i < 5; i++) {
+  // loop
+  console.log('Iteration:', i); // console, variable
+}
+
+// Arrays
+const numbers = [1, 2, 3];
+numbers.forEach((num) => console.log(num)); // array, function call
+
+// Promises and async/await
+async function fetchData(url) {
+  try {
+    const response = await fetch(url); // async/await, function call
+    const data = await response.json(); // method call
+    console.log(data); // console
+  } catch (error) {
+    console.error(error); // console
+  }
+}
+
+fetchData();
+
+// Regular expressions
+const regex = /[A-Za-z]+/g; // regex
+const text = 'Hello World';
+const matches = text.match(regex); // method call
+console.log(matches); // console
 
 // 对象与解构
 const user = {
@@ -20,21 +74,16 @@ const user = {
 
 // 对象解构
 const {
-  name,
   email,
   address: { city },
 } = user;
 
-console.log(name, email, city);
+console.log(email, city);
 
 // 数组与数组解构
 const colors = ['red', 'green', 'blue'];
 const [primaryColor, secondaryColor, ...otherColors] = colors;
-
-// 函数声明
-function calculateTotal(price, quantity, taxRate = 0.1) {
-  return price * quantity * (1 + taxRate);
-}
+console.log(primaryColor, secondaryColor, otherColors);
 
 // 箭头函数
 const double = (x) => x * 2;
@@ -42,17 +91,12 @@ const greet = (name) => {
   console.log(`Hello, ${name}!`);
   return `Greeting sent to ${name}`;
 };
+console.log(double(6), greet('foo'));
 
 // 回调函数
 setTimeout(() => {
   console.log('Timeout executed');
 }, 1000);
-
-// 高阶函数
-const numbers = [1, 2, 3, 4, 5];
-const doubled = numbers.map((num) => num * 2);
-const evenNumbers = numbers.filter((num) => num % 2 === 0);
-const sum = numbers.reduce((total, current) => total + current, 0);
 
 // 类声明
 class Product {
@@ -62,7 +106,7 @@ class Product {
     this._discount = 0;
   }
 
-  get discountedPrice() {
+  get discount() {
     return this.price * (1 - this._discount);
   }
 
@@ -72,7 +116,7 @@ class Product {
 
   applyDiscount(percentage) {
     this._discount = percentage / 100;
-    return this.discountedPrice;
+    return this.discount;
   }
 
   static compare(productA, productB) {
@@ -92,6 +136,8 @@ class DigitalProduct extends Product {
     console.log(`Product ${this.name} can be downloaded at ${this.downloadUrl}`);
   }
 }
+const dp = new DigitalProduct();
+console.log(dp);
 
 // 异步编程 - Promise
 function fetchUserData(userId) {
@@ -122,38 +168,10 @@ fetchUserData(123)
     console.log('Operation completed');
   });
 
-// Async/Await
-async function loadUserProfile(userId) {
-  try {
-    const userData = await fetchUserData(userId);
-    const posts = await fetchUserPosts(userData.id);
-    return { user: userData, posts };
-  } catch (error) {
-    console.error('Failed to load profile:', error);
-    throw error;
-  }
-}
-
-// 模块导出
-export { Product, DigitalProduct };
-export default calculateTotal;
-
-// DOM 操作
-const button = document.getElementById('submit-button');
-button.addEventListener('click', function (event) {
-  event.preventDefault();
-  const formData = new FormData(document.querySelector('form'));
-  console.log('Form submitted:', Object.fromEntries(formData));
-});
-
 // 正则表达式
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = emailRegex.test('user@example.com');
-
-// 模板字符串
-const greeting = `Welcome, ${username}!
-Your account is ${isActive ? 'active' : 'inactive'}.
-Your current level: ${calculateLevel(age, isActive)}`;
+console.log(isValidEmail);
 
 // 闭包
 function createCounter() {
@@ -172,15 +190,20 @@ function createCounter() {
     },
   };
 }
+createCounter();
 
 // Symbol
 const uniqueKey = Symbol('description');
 const obj = {
   [uniqueKey]: 'This property uses a Symbol as a key',
 };
+console.log(obj);
 
-// Set 和 Map
+// Set
 const uniqueItems = new Set([1, 2, 3, 1, 2]);
+console.log(uniqueItems);
+
+// Map
 const userRoles = new Map();
 userRoles.set(1001, ['admin']);
 userRoles.set(1002, ['editor', 'viewer']);
