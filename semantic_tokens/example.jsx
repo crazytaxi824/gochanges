@@ -1,6 +1,5 @@
 // 导入语句
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
-import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import { BrowserRouter, Route, Switch, Link, useParams, useHistory } from 'react-router-dom';
 
@@ -104,6 +103,7 @@ class UserCard extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    console.log(prevProps);
     if (prevState.isExpanded !== this.state.isExpanded) {
       console.log('Expansion state changed');
     }
@@ -421,6 +421,7 @@ function ThemeToggle() {
 
 // 其他页面组件
 function Home() {
+  App();
   return (
     <div className='home-page'>
       <h2>Welcome to User Management</h2>
