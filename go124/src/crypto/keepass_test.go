@@ -64,18 +64,10 @@ func HashHeader(key []byte) string {
 }
 
 func TestHash(t *testing.T) {
-	// 生成 256bit (32byte) -> 64 hex-string 的 Data 数据.
+	// 生成 256bit (32byte) key 数据
 	h := sha256.New()
 	h.Write([]byte("123"))
 	key := h.Sum(nil)
-
-	// 生成 <Data> XXXX...XXXX </Data> (64 hex-string 256-bit)
-	dataHex := strings.ToUpper(hex.EncodeToString(key))
-	t.Log(dataHex)
-	// t.Log(len(s))
-
-	// 生成 <Data Hash="XXXXXXXX"> (8 hex string)
-	hashHeader := HashHeader(key)
 
 	// generate XML key file
 	ss, err := XMLMarshal(&KeyFile{
@@ -84,8 +76,11 @@ func TestHash(t *testing.T) {
 		},
 		Key: Key{
 			Data: Data{
-				Hash: hashHeader,
-				Text: dataHex,
+				// 根据 key (32byte) 生成 <Data Hash="XXXXXXXX"> 8hex-string, 检查 <Data> 数据的完整性.
+				Hash: HashHeader(key),
+
+				// 通过 key (32byte) 生成 <Data>XXXX...XXXX</Data> 64hex-string
+				Text: strings.ToUpper(hex.EncodeToString(key)),
 			},
 		},
 	})
