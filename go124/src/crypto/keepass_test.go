@@ -24,7 +24,7 @@ import (
 )
 
 type KeyFile struct {
-	XMLName xml.Name `xml:"KeyFile"`
+	XMLName xml.Name `xml:"KeyFile"` // XML 最外层 tag name
 	Meta    Meta     `xml:"Meta"`
 	Key     Key      `xml:"Key"`
 }
@@ -38,8 +38,12 @@ type Key struct {
 }
 
 type Data struct {
-	Hash string `xml:"Hash,attr"` // attribute
-	Text string `xml:",chardata"` // ",chardata" 表示将该字段(Text)映射到 XML 元素的内部文本内容（character data）中
+	// attribute
+	Hash string `xml:"Hash,attr"`
+
+	// ",chardata" (character data) 表示将该字段映射到 <Data></Data> 内部.
+	// 不能使用 tag name `xml:"Text,chardata"`. invalid XML tag: cannot specify name together with option ",chardata"
+	Text string `xml:",chardata"`
 }
 
 // generate XML file
