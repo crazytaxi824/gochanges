@@ -15,6 +15,8 @@ func RandomBytes(l int) ([]byte, error) {
 	return r, err
 }
 
+// AES 密钥长度只可以是16、24或32字节，分别对应AES-128、AES-192和AES-256, (1byte = 8bit, 32byte = 256bit)
+// AES 块大小（block size）始终为 16 字节（128 位），无论是 AES-128、AES-192 还是 AES-256
 // 如果 data 正好是 blockSize 的倍数, 则 PKCS#7 会在 data 最后 pad 16 个 []byte(16)
 // pkcs7Pad 对明文数据进行PKCS#7填充
 // 如需要填充 5 个数, 则为 [5]byte{5,5,5,5,5}
@@ -46,7 +48,7 @@ func AESEncrypt(plaintext, key []byte) (ciphertext, iv []byte, err error) {
 	// AES: the only valid block-size is 128 bits(16 bytes)
 	// fmt.Println(block.BlockSize())
 
-	// 创建一个随机初始化向量 (IV), 长度必须为 BlockSize - 16 bytes 固定值
+	// 创建一个随机初始化向量 (IV), 长度必须为 BlockSize (16bytes) 固定值
 	// NOTE: IV 必须每次不同.
 	iv, err = RandomBytes(block.BlockSize())
 	if err != nil {
