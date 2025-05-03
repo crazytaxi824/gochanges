@@ -6,6 +6,9 @@ package crypto_test
 import (
 	"bytes"
 	"encoding/hex"
+	"io"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"local/src/crypto"
@@ -38,4 +41,50 @@ func TestAESexample(t *testing.T) {
 
 	// 验证
 	t.Log(bytes.Equal(plaintext2, plaintext))
+}
+
+func TestAESFile(t *testing.T) {
+	home, _ := os.LookupEnv("HOME")
+	f, err := os.Open(filepath.Join(home, "Desktop", "testfile"))
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+
+	key, _ := crypto.RandomBytes(32)
+	cipherBytes, iv, err := crypto.AESEncrypt(content, key)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+
+	t.Log(hex.EncodeToString(iv))
+	t.Log(len(cipherBytes))
+	t.Log(hex.EncodeToString(cipherBytes[:64]))
+
+	plainBytes, err := crypto.AESDecrypt(cipherBytes, iv, key)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+
+	nf, err := os.OpenFile(filepath.Join(home, "Desktop", "n.kdbx"), os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	defer nf.Close()
+
+	_, err = nf.Write(plainBytes)
+	if err != nil {
+		t.Log(err)
+		return
+	}
 }
