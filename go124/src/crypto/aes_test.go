@@ -42,47 +42,63 @@ func TestAESexample(t *testing.T) {
 }
 
 func TestAESFile(t *testing.T) {
-	home, _ := os.LookupEnv("HOME")
-	f, err := os.Open(filepath.Join(home, "Desktop", "testfile"))
-	if err != nil {
-		t.Log(err)
-		return
-	}
-	defer f.Close()
-
-	content, err := io.ReadAll(f)
-	if err != nil {
-		t.Log(err)
-		return
-	}
-
 	key, _ := RandomBytes(32)
-	cipherBytes, iv, err := AESEncrypt(content, key)
+	home, _ := os.LookupEnv("HOME")
+
+	// source file
+	sf, err := os.Open(filepath.Join(home, "Desktop", "testfile2"))
 	if err != nil {
 		t.Log(err)
 		return
 	}
+	defer sf.Close()
 
+	// cipher file
+	cf, err := os.OpenFile(filepath.Join(home, "Desktop", "cipher"), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	defer cf.Close()
+
+	// 加密 file
+	iv, err := AESEncryptFile(sf, cf, key)
+	if err != nil {
+		t.Log(err)
+		return
+	}
 	t.Log(hex.EncodeToString(iv))
-	t.Log(len(cipherBytes))
-	t.Log(hex.EncodeToString(cipherBytes[:64]))
+	cf.Seek(0, 0) // move offset back to beginning
 
-	plainBytes, err := AESDecrypt(cipherBytes, iv, key)
+	// plain file: decrypt from cipher file
+	pf, err := os.OpenFile(filepath.Join(home, "Desktop", "plain"), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	defer pf.Close()
+
+	err = AESDecryptFile(pf, cf, key, iv)
 	if err != nil {
 		t.Log(err)
 		return
 	}
 
-	nf, err := os.OpenFile(filepath.Join(home, "Desktop", "n.kdbx"), os.O_CREATE|os.O_WRONLY, 0600)
+	// compare two files
+	sf.Seek(0, 0) // move offset back to beginning
+	pf.Seek(0, 0)
+	sfb, err := io.ReadAll(sf)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	defer nf.Close()
 
-	_, err = nf.Write(plainBytes)
+	pfb, err := io.ReadAll(pf)
 	if err != nil {
 		t.Log(err)
 		return
 	}
+
+	t.Log(len(sfb), len(pfb))
+	t.Log(bytes.Equal(sfb, pfb))
 }
