@@ -46,7 +46,7 @@ func TestAESFile(t *testing.T) {
 	home, _ := os.LookupEnv("HOME")
 
 	// source file
-	sf, err := os.Open(filepath.Join(home, "Desktop", "testfile2"))
+	sf, err := os.Open(filepath.Join(home, "Desktop", "testfile"))
 	if err != nil {
 		t.Log(err)
 		return

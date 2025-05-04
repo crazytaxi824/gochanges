@@ -31,12 +31,12 @@ func pkcs7Pad(data []byte, blockSize int) []byte {
 
 // pkcs7Unpad
 func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
-	// data size 必须是 16 的倍数.
+	// data size 必须是 blockSize 的倍数.
 	if len(data) == 0 || len(data)%blockSize != 0 {
 		return nil, errors.New("invalid padded data length")
 	}
 
-	// 0 < pad size <= 16
+	// 0 < padSize <= blockSize
 	padLen := int(data[len(data)-1])
 	if padLen <= 0 || padLen > blockSize {
 		return nil, errors.New("invalid padding size")
@@ -92,7 +92,7 @@ func AESDecrypt(ciphertext, iv, key []byte) (plaintext []byte, err error) {
 	return pkcs7Unpad(paddedText, block.BlockSize())
 }
 
-func AESEncryptFile(plainFile, cipherFile *os.File, key []byte) (iv []byte, err error) {
+func AESEncryptFile(srcFile, cipherFile *os.File, key []byte) (iv []byte, err error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func AESEncryptFile(plainFile, cipherFile *os.File, key []byte) (iv []byte, err 
 	}
 	encrypter := cipher.NewCBCEncrypter(block, iv)
 
-	freader := bufio.NewReader(plainFile)
+	freader := bufio.NewReader(srcFile)
 	buffer := make([]byte, block.BlockSize())
 	dst := make([]byte, block.BlockSize())
 
@@ -111,27 +111,22 @@ func AESEncryptFile(plainFile, cipherFile *os.File, key []byte) (iv []byte, err 
 	for {
 		var n int
 		n, err = freader.Read(buffer)
-		if err != nil {
-			if errors.Is(err, io.EOF) && !padded {
-				// 文件正好是 16 的倍数. 添加 []byte{16, 16 ... 16} pad
-				buffer = pkcs7Pad([]byte{}, block.BlockSize())
-				padded = true
-			} else if errors.Is(err, io.EOF) && padded {
-				// OK, EOF
-				return iv, nil
-			} else {
-				return nil, err
-			}
+		if err != nil && errors.Is(err, io.EOF) && padded {
+			// NOTE: finished EOF
+			return iv, nil
+		} else if err != nil && !errors.Is(err, io.EOF) {
+			return nil, err
 		}
 
-		// if n > 0 && n < 16: end of file padding, mark padding
-		if n > 0 && n < 16 {
-			// end of file
+		if n < 0 || n > block.BlockSize() {
+			return nil, errors.New("buffer read size error")
+		} else if n >= 0 && n < block.BlockSize() {
+			// last line, NOTE: when n==0 (EOF && !padded) 说明是文件正好是 blockSize 的倍数
 			if padded {
-				return nil, errors.New("encrypt Failed: padded more than once")
+				return nil, errors.New("encrypt Failed: pkcs7Pad more than once, buffer read size error")
 			}
 			buffer = pkcs7Pad(buffer[:n], block.BlockSize())
-			padded = true
+			padded = true // mark padding
 		}
 
 		// 加密数据
@@ -145,7 +140,7 @@ func AESEncryptFile(plainFile, cipherFile *os.File, key []byte) (iv []byte, err 
 	}
 }
 
-func AESDecryptFile(plainFile, cipherFile *os.File, key, iv []byte) error {
+func AESDecryptFile(dstFile, cipherFile *os.File, key, iv []byte) error {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return err
@@ -161,15 +156,15 @@ func AESDecryptFile(plainFile, cipherFile *os.File, key, iv []byte) error {
 		var n int
 		n, err = freader.Read(buffer)
 		if err != nil && errors.Is(err, io.EOF) {
-			// OK, EOF
+			// NOTE: finished EOF
 			return nil
 		} else if err != nil && !errors.Is(err, io.EOF) {
 			return err
 		}
 
-		// 读取的数据必须是 16 的倍数.
+		// 读取的数据必须是 blockSize 的倍数.
 		if n != block.BlockSize() {
-			return errors.New("buffer read size is not 16 bytes")
+			return errors.New("buffer read size is not blockSize")
 		}
 
 		// peak for EOF
@@ -191,8 +186,8 @@ func AESDecryptFile(plainFile, cipherFile *os.File, key, iv []byte) error {
 			}
 		}
 
-		// 写入文件
-		_, err = plainFile.Write(dst)
+		// 分段写入文件
+		_, err = dstFile.Write(dst)
 		if err != nil {
 			return err
 		}
