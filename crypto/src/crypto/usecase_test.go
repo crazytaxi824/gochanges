@@ -30,7 +30,7 @@ func TestMixEncrypt(t *testing.T) {
 	}
 
 	// AES encrypt
-	ciphertext, iv, err := crypto.AESCBCEncrypt(plaintext, key)
+	ciphertext, err := crypto.AESGCMEncrypt(plaintext, key)
 	if err != nil {
 		t.Error(err)
 		return
@@ -43,7 +43,6 @@ func TestMixEncrypt(t *testing.T) {
 
 	fmt.Println("--- AES encrypt success ---")
 	fmt.Printf("algo: AES-%d-%s\n", len(key)*8, "CBC-PKCS7Padding") // 记录算法
-	fmt.Printf("iv: %s\n", hex.EncodeToString(iv))                  // 记录 init vector
 	fmt.Printf("cipher: %s\n", hex.EncodeToString(ciphertext))      // 记录 cipher text
 }
 
@@ -56,7 +55,6 @@ func TestMixDecrypt(t *testing.T) {
 
 	// 密文
 	cipher, _ := hex.DecodeString("cipher hex")
-	iv, _ := hex.DecodeString("iv hex")
 
 	// pbkdf2 gen key
 	key, err := pbkdf2.Key(sha3.New512, password, salt, iter, keyLen)
@@ -66,7 +64,7 @@ func TestMixDecrypt(t *testing.T) {
 	}
 
 	// AES decrypt
-	plaintext, err := crypto.AESCBCDecrypt(cipher, iv, key)
+	plaintext, err := crypto.AESGCMDecrypt(cipher, key)
 	if err != nil {
 		t.Error(err)
 		return
