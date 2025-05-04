@@ -11,32 +11,44 @@ import (
 
 func TestMlkem(t *testing.T) {
 	// Alice
-	k, err := mlkem.GenerateKey768()
+	secretKey, err := mlkem.GenerateKey768()
 	if err != nil {
 		t.Log(err)
 		return
 	}
 
-	// give to Bob
-	ekbyte := k.EncapsulationKey().Bytes() // 如果中间人攻击获取 ekbyte 则不安全.
+	// 生成 public key, 仅凭公钥 public key, 无法恢复出 shared key.
+	pkByte := secretKey.EncapsulationKey().Bytes()
+	t.Log(len(pkByte)) // 1184
+
+	// give public key to Bob
 
 	// Bob
-	ek, err := mlkem.NewEncapsulationKey768(ekbyte)
+	// get public key
+	pk, err := mlkem.NewEncapsulationKey768(pkByte)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	t.Log(hex.EncodeToString(ekbyte) == hex.EncodeToString(ek.Bytes())) // true
+	t.Log(hex.EncodeToString(pkByte) == hex.EncodeToString(pk.Bytes())) // true
+
+	// 通过 public key 生成 cipher, 和 shared key.
+	// 就算 cipher 也泄漏了, 同样无法恢复出 shared key.
+	sharedKeyB, cipher := pk.Encapsulate()
+	// t.Log(hex.EncodeToString(cipher))
+	t.Log(len(cipher)) // 1088
 
 	// return cipher to Alice
-	skb, cipher := ek.Encapsulate()
-	t.Log(hex.EncodeToString(skb))
 
 	// Alice
-	ska, err := k.Decapsulate(cipher)
+	// 通过 cipher 生成 shared key.
+	sharedKeyA, err := secretKey.Decapsulate(cipher)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	t.Log(hex.EncodeToString(ska))
+
+	// shared key 一样, 使用对称加密.
+	t.Log(hex.EncodeToString(sharedKeyB))
+	t.Log(hex.EncodeToString(sharedKeyA))
 }

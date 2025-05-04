@@ -13,20 +13,17 @@ func TestHkdf(t *testing.T) {
 	secret := []byte("secret")
 	salt := []byte("random_salt") // 推荐长度至少为16字节
 	keyInfo := "区分上下文, 用于区分不同用途的密钥，防止密钥重用"
-	keyLen := 32
+	keyLen := 64
 
 	b, err := hkdf.Key(sha3.New512, secret, salt, keyInfo, keyLen)
 	if err != nil {
 		t.Log(err)
 		return
 	}
+	t.Log(hex.EncodeToString(b))
 
-	s := hex.EncodeToString(b)
-	t.Log(s)
-	t.Log(len(s))
-
-	b, _ = hkdf.Key(sha3.New512, secret, salt, keyInfo, 20)
-	t.Log(hex.EncodeToString(b)) // secret 的前半段 20 和 32 是一样的
+	b, _ = hkdf.Key(sha3.New512, secret, salt, keyInfo, 32)
+	t.Log(hex.EncodeToString(b)) // 生成的 key 前半段是一样的
 }
 
 // 一般情况下使用 Key()
