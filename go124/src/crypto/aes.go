@@ -31,12 +31,23 @@ func pkcs7Pad(data []byte, blockSize int) []byte {
 
 // pkcs7Unpad
 func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
-	length := len(data)
-	padding := int(data[length-1])
-	if padding <= 0 || padding > blockSize {
-		return nil, errors.New("invalid padding")
+	// data size 必须是 16 的倍数.
+	if len(data) == 0 || len(data)%blockSize != 0 {
+		return nil, errors.New("invalid padded data length")
 	}
-	return data[:length-padding], nil
+
+	// 0 < pad size <= 16
+	padLen := int(data[len(data)-1])
+	if padLen <= 0 || padLen > blockSize {
+		return nil, errors.New("invalid padding size")
+	}
+
+	// 验证 padding format. []byte{x,x,x,x,x,x,x,x,x,x,x,5,5,5,5,5}
+	padding := data[len(data)-padLen:]
+	if !bytes.Equal(padding, bytes.Repeat([]byte{byte(padLen)}, padLen)) {
+		return nil, errors.New("invalid PKCS7 padding")
+	}
+	return data[:len(data)-padLen], nil
 }
 
 // 加密
