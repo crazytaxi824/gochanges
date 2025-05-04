@@ -59,6 +59,7 @@ func XMLMarshal(kf *KeyFile) ([]byte, error) {
 	return xh, nil
 }
 
+// HashHeader 检查 <Data></Data> 数据完整性, VVI: 必须使用 Sha256(Sha2)
 func HashHeader(key []byte) string {
 	h := sha256.New()
 	h.Write(key)
@@ -71,7 +72,7 @@ func TestHash(t *testing.T) {
 	// 生成 256bit (32byte) key 数据
 	h := sha256.New()
 	h.Write([]byte("123"))
-	key := h.Sum(nil)
+	key := h.Sum(nil) // VVI: key 可以是任何数据
 
 	// generate XML key file
 	ss, err := XMLMarshal(&KeyFile{
@@ -80,10 +81,11 @@ func TestHash(t *testing.T) {
 		},
 		Key: Key{
 			Data: Data{
-				// 根据 key (32byte) 生成 <Data Hash="XXXXXXXX"> 8hex-string, 检查 <Data> 数据的完整性.
+				// hex(sha256(key)) 生成 <Data Hash="XXXXXXXX"> 取前8位, 8 hex-string, 用于检查 <Data> 数据的完整性.
+				// VVI: 必须使用 sha256
 				Hash: HashHeader(key),
 
-				// 通过 key (32byte) 生成 <Data>XXXX...XXXX</Data> 64hex-string
+				// 通过 hex(key) 生成 <Data>XXXX...XXXX</Data> hex-string
 				Text: strings.ToUpper(hex.EncodeToString(key)),
 			},
 		},

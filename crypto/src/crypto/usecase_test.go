@@ -42,8 +42,8 @@ func TestMixEncrypt(t *testing.T) {
 	fmt.Printf("salt: %s\n", hex.EncodeToString(salt)) // 记录 salt
 
 	fmt.Println("--- AES encrypt success ---")
-	fmt.Printf("algo: AES-%d-%s\n", len(key)*8, "CBC-PKCS7Padding") // 记录算法
-	fmt.Printf("cipher: %s\n", hex.EncodeToString(ciphertext))      // 记录 cipher text
+	fmt.Printf("algo: AES-%d-%s\n", len(key)*8, "GCM")         // 记录算法
+	fmt.Printf("cipher: %s\n", hex.EncodeToString(ciphertext)) // 记录 cipher text
 }
 
 func TestMixDecrypt(t *testing.T) {
