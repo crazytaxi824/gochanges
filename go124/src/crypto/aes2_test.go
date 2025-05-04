@@ -1,4 +1,4 @@
-package crypto_test
+package crypto
 
 import (
 	"bufio"
@@ -12,34 +12,6 @@ import (
 	"path/filepath"
 	"testing"
 )
-
-func pkcs7Pad(data []byte, blockSize int) []byte {
-	padding := blockSize - (len(data) % blockSize)
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-
-	// fmt.Println(padding, len(padText), padText)  // padding == len(padText)
-	return append(data, padText...)
-}
-
-func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
-	// data size 必须是 16 的倍数.
-	if len(data) == 0 || len(data)%blockSize != 0 {
-		return nil, errors.New("invalid padded data length")
-	}
-
-	// 0 < pad size <= 16
-	padLen := int(data[len(data)-1])
-	if padLen <= 0 || padLen > blockSize {
-		return nil, errors.New("invalid padding size")
-	}
-
-	// 验证 padding format. []byte{x,x,x,x,x,x,x,x,x,x,x,5,5,5,5,5}
-	padding := data[len(data)-padLen:]
-	if !bytes.Equal(padding, bytes.Repeat([]byte{byte(padLen)}, padLen)) {
-		return nil, errors.New("invalid PKCS7 padding")
-	}
-	return data[:len(data)-padLen], nil
-}
 
 func TestAESRangeEncrypt(t *testing.T) {
 	block, _ := aes.NewCipher([]byte("passwordpasswordpasswordpassword"))
