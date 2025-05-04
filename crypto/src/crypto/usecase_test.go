@@ -30,7 +30,7 @@ func TestMixEncrypt(t *testing.T) {
 	}
 
 	// AES encrypt
-	ciphertext, iv, err := crypto.AESEncrypt(plaintext, key)
+	ciphertext, iv, err := crypto.AESCBCEncrypt(plaintext, key)
 	if err != nil {
 		t.Error(err)
 		return
@@ -66,7 +66,7 @@ func TestMixDecrypt(t *testing.T) {
 	}
 
 	// AES decrypt
-	plaintext, err := crypto.AESDecrypt(cipher, iv, key)
+	plaintext, err := crypto.AESCBCDecrypt(cipher, iv, key)
 	if err != nil {
 		t.Error(err)
 		return

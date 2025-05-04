@@ -21,7 +21,7 @@ func TestAESexample(t *testing.T) {
 	plaintext := []byte("this is a AES test!!!")
 
 	// 加密
-	ciphertext, iv, err := AESEncrypt(plaintext, key)
+	ciphertext, iv, err := AESCBCEncrypt(plaintext, key)
 	if err != nil {
 		t.Log(err)
 		return
@@ -30,7 +30,7 @@ func TestAESexample(t *testing.T) {
 	t.Log(hex.EncodeToString(ciphertext))
 
 	// 解密
-	plaintext2, err := AESDecrypt(ciphertext, iv, key)
+	plaintext2, err := AESCBCDecrypt(ciphertext, iv, key)
 	if err != nil {
 		t.Log(err)
 		return
@@ -62,7 +62,7 @@ func TestAESFile(t *testing.T) {
 	defer cf.Close()
 
 	// 加密 file
-	iv, err := AESEncryptFile(sf, cf, key)
+	iv, err := AESCBCEncryptFile(sf, cf, key)
 	if err != nil {
 		t.Log(err)
 		return
@@ -78,7 +78,7 @@ func TestAESFile(t *testing.T) {
 	}
 	defer pf.Close()
 
-	err = AESDecryptFile(pf, cf, key, iv)
+	err = AESCBCDecryptFile(pf, cf, key, iv)
 	if err != nil {
 		t.Log(err)
 		return

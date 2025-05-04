@@ -51,7 +51,7 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 }
 
 // 加密
-func AESEncrypt(plaintext, key []byte) (ciphertext, iv []byte, err error) {
+func AESCBCEncrypt(plaintext, key []byte) (ciphertext, iv []byte, err error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, nil, err
@@ -76,7 +76,7 @@ func AESEncrypt(plaintext, key []byte) (ciphertext, iv []byte, err error) {
 }
 
 // 必须要知道 IV 才能正确解密.
-func AESDecrypt(ciphertext, iv, key []byte) (plaintext []byte, err error) {
+func AESCBCDecrypt(ciphertext, iv, key []byte) (plaintext []byte, err error) {
 	// 创建一个 AES 块密码
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -92,7 +92,7 @@ func AESDecrypt(ciphertext, iv, key []byte) (plaintext []byte, err error) {
 	return pkcs7Unpad(paddedText, block.BlockSize())
 }
 
-func AESEncryptFile(srcFile, cipherFile *os.File, key []byte) (iv []byte, err error) {
+func AESCBCEncryptFile(srcFile, cipherFile *os.File, key []byte) (iv []byte, err error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func AESEncryptFile(srcFile, cipherFile *os.File, key []byte) (iv []byte, err er
 	}
 }
 
-func AESDecryptFile(dstFile, cipherFile *os.File, key, iv []byte) error {
+func AESCBCDecryptFile(dstFile, cipherFile *os.File, key, iv []byte) error {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return err
