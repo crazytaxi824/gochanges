@@ -26,18 +26,24 @@ func TestHkdf(t *testing.T) {
 	t.Log(hex.EncodeToString(b)) // 生成的 key 前半段是一样的
 }
 
-// 一般情况下使用 Key()
+// NOTE: 一般情况下直接使用 Key()
 func TestExtract(t *testing.T) {
 	secret := []byte("secret")
 	salt := []byte("random_salt") // 推荐长度至少为16字节
 
-	b, err := hkdf.Extract(sha3.New512, secret, salt)
+	prk, err := hkdf.Extract(sha3.New512, secret, salt)
 	if err != nil {
 		t.Log(err)
 		return
 	}
+	t.Log(hex.EncodeToString(prk))
+	t.Log(len(prk))
 
-	s := hex.EncodeToString(b)
-	t.Log(s)
-	t.Log(len(s))
+	okm, err := hkdf.Expand(sha3.New256, prk, "info", 48)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	t.Log(hex.EncodeToString(okm))
+	t.Log(len(okm))
 }
