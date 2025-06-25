@@ -2,7 +2,14 @@
 algo: PBKDF2-SHA3-512
 iter: 1000000
 salt: 49daadfd1292e8a3e4a48192611badd29341081778306754376df6bbb2658f93
-
 --- AES encrypt success ---
 algo: AES-256-GCM
 cipher: 93f2f30c4543620a56b13739cf79de7e0cd85ab994094872fd62aa5588ff8d7cc3baa8e4e5e1b1f1740a3c7dab24be2e6d1d18cb4eba29238797a0f30b5f
+
+--- PBKDF2 keygen success ---
+algo: PBKDF2-SHA3-512
+iter: 1000000
+salt: c244d85ab6d29f949ef8afe2819a4f37392917245e37d07d91175315b81f36fc
+--- AES encrypt success ---
+algo: AES-256-GCM
+cipher: 9341e9aeeeba3803af69504816dab3300b884d1c1dd5bde060cd3aad038648452ebb1a328edb65e2f4ab743b452fd079be7dafa4a59679fa2b49d8d57cf7
