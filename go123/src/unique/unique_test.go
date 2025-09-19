@@ -5,7 +5,8 @@ import (
 	"unique"
 )
 
-func TestUniq(t *testing.T) {
+// unique 仅适用于可比较的类型 comparable
+func TestUnique(t *testing.T) {
 	str1 := "hello"
 	str2 := "hello"
 	t.Logf("%p %p", &str1, &str2) // 0x14000106300 0x14000106310
@@ -16,4 +17,5 @@ func TestUniq(t *testing.T) {
 	// comparable
 	t.Log(h1, h2)   // {0x14000106350} {0x14000106350}
 	t.Log(h1 == h2) // true
+	t.Log(h1.Value(), h2.Value())
 }
