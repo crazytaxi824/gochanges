@@ -18,8 +18,10 @@
         <input type="number" name="age" value="30" />
       </label>
       <br />
-      <button type="submit">Submit /</button>
+      <button type="submit">POST /</button>
     </form>
+
+    <p></p>
 
     <form id="postForm2">
       <label>
@@ -32,50 +34,36 @@
         <input type="number" name="age" value="30" />
       </label>
       <br />
-      <button type="submit">Submit /a/b</button>
+      <button type="submit">POST /a/b</button>
     </form>
 
     <script>
-      const form = document.getElementById('postForm');
-      form.addEventListener('submit', function (e) {
-        e.preventDefault(); // 阻止默认提交
+      function attachFormListener(form, url) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault(); // 阻止默认提交
 
-        const formData = new URLSearchParams(new FormData(form));
-        fetch('http://127.0.0.1:18080', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData,
-        })
-          .then((response) => response.text())
-          .then((data) => {
-            console.log('Server response:', data);
-            alert('Server response: ' + data);
+          const formData = new URLSearchParams(new FormData(form));
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData,
           })
-          .catch((err) => console.error(err));
-      });
+            .then((response) => response.text())
+            .then((data) => {
+              console.log('Server response:', data);
+              alert('Server response: ' + data);
+            })
+            .catch((err) => console.error(err));
+        });
+      }
+
+      const form = document.getElementById('postForm');
+      attachFormListener(form, 'http://127.0.0.1:18080');
 
       const form2 = document.getElementById('postForm2');
-      form2.addEventListener('submit', function (e) {
-        e.preventDefault(); // 阻止默认提交
-
-        const formData = new URLSearchParams(new FormData(form));
-
-        fetch('http://127.0.0.1:18080/a/b', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData,
-        })
-          .then((response) => response.text())
-          .then((data) => {
-            console.log('Server response:', data);
-            alert('Server response: ' + data);
-          })
-          .catch((err) => console.error(err));
-      });
+      attachFormListener(form2, 'http://127.0.0.1:18080/a/b');
     </script>
   </body>
 </html>

@@ -6,7 +6,9 @@ import (
 	"time"
 )
 
-// 需要构造一个 POST 请求
+// NOTE: 测试需要构造一个 html 使用浏览器发送 POST 请求才能生效
+// 如果直接使用工具 curl, postman, go... 发送请求 origin 都为空
+// "GET", "HEAD", "OPTIONS" 请求不会触发 crossorigin 检查
 func TestCrossOrigin(t *testing.T) {
 	// 防御 CSRF 攻击
 	c := http.NewCrossOriginProtection()

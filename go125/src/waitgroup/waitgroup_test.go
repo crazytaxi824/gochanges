@@ -5,15 +5,17 @@ import (
 	"testing"
 )
 
+// 传统方式
 func TestWaitGroup(t *testing.T) {
 	var w sync.WaitGroup
 
+	// 更灵活
 	for i := range 3 {
 		w.Add(1)
-		go func() {
+		go func(n int) {
 			defer w.Done()
-			t.Log(i)
-		}()
+			t.Log(n)
+		}(i)
 	}
 	w.Wait()
 }
@@ -23,6 +25,7 @@ func TestWaitGroup2(t *testing.T) {
 	var w sync.WaitGroup
 
 	for i := range 3 {
+		// 更方便
 		w.Go(func() {
 			t.Log(i)
 		})
