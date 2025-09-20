@@ -39,3 +39,20 @@ func TestAlignof2(t *testing.T) {
 	t.Log(unsafe.Alignof(S2{})) // 8
 	t.Log(unsafe.Sizeof(S2{}))  // 24
 }
+
+func TestSliceAlign(t *testing.T) {
+	s1 := []int{1, 2, 3}
+	s2 := []byte{1, 2, 3}
+
+	t.Log(unsafe.Alignof(s1[0])) // 8
+	t.Log(unsafe.Alignof(s2[0])) // 1
+
+	t.Log(unsafe.Alignof(&s1))    // sliceHeader 结构体的内存地址的最大对齐值
+	t.Log(unsafe.Alignof(&s1[0])) // 第一个 elem 的内存地址的最大对齐值
+
+	t.Log(unsafe.Sizeof(s1[0])) // 8
+	t.Log(unsafe.Sizeof(s2[0])) // 1
+
+	t.Log(unsafe.Sizeof(&s1))    // sliceHeader 结构体的内存地址的内存占用
+	t.Log(unsafe.Sizeof(&s1[0])) // 第一个 elem 的内存地址的内存占用
+}
