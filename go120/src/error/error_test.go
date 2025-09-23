@@ -46,3 +46,24 @@ func TestErrorAs(t *testing.T) {
 		}
 	}
 }
+
+var (
+	ErrDB   = errors.New("db error")
+	ErrAuth = errors.New("auth error")
+)
+
+func TestErrorJoin(t *testing.T) {
+	// combine multiple errors
+	err := errors.Join(ErrDB, ErrAuth)
+
+	// print
+	t.Log("Joined error:", err)
+
+	// check membership
+	if errors.Is(err, ErrDB) {
+		t.Log("Contains ErrDB")
+	}
+	if errors.Is(err, ErrAuth) {
+		t.Log("Contains ErrAuth")
+	}
+}
