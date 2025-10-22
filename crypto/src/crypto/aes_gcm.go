@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-// VVI: 默认 NonceSize = 12
+// VVI: 默认 NonceSize = 12, key 长度必须为 16|24|32
 // nonce(iv), additionalData 都可以公开, 但是 nonce 一定不能重复, 否则会有严重安全隐患.
 // additionalData 不参与加密, 但是参 hash tag. 所以 additionalData 不管多长都不会影响 cipher 长度, 但是影响解密.
 func AESGCMEncrypt(plaintext, key []byte) (ciphertext []byte, err error) {
