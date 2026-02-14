@@ -1,4 +1,4 @@
-package src_test
+package majorchanges_test
 
 import "testing"
 
