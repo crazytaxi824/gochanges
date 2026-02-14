@@ -24,6 +24,7 @@ func rangeNodes[P INode[P]](n P) {
 	}
 }
 
+// 实现接口
 type UserNode struct {
 	children []*UserNode // 实际存储数据的字段
 	UserName string

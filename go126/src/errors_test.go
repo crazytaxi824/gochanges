@@ -39,7 +39,6 @@ func TestErrorsAsType(t *testing.T) {
 		// 使用 errors.AsType[*AppError](err)
 		// 相比旧的 errors.As(&target, err)，它直接返回转换后的类型和布尔值
 		if target, ok := errors.AsType[*AppError](err); ok {
-			t.Log("成功捕获到业务错误！")
 			t.Logf("HTTP 状态码: %d\n", target.Code)
 			t.Logf("具体信息: %s\n", target.Message)
 		} else {
