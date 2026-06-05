@@ -1,4 +1,4 @@
-// mix of PBKDF2 with AES-CBC encryption test
+// mix of PBKDF2 with AES-GCM encryption test
 
 package crypto_test
 

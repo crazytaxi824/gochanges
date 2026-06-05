@@ -1,4 +1,4 @@
-// mix of Argon2id + AES-CBC + HMAC-SHA256 encryption test
+// mix of Argon2id + AES-GCM + HMAC-SHA256 encryption test
 // Argon2id: 派生密钥
 // AES-CBC:  加密数据
 // HAMC: 验证数据完成性
