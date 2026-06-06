@@ -9,12 +9,12 @@ import (
 
 // 参数结构体（可按需调整）
 type Argon2Params struct {
-	Version int    `json:"version"`  // argon2 version
-	Memory  uint32 `json:"memory"`   // KB
-	Time    uint32 `json:"time"`     // iterations, 迭代次数
-	Threads uint8  `json:"threads"`  // 并行计算数量
-	KeyLen  uint32 `json:"key_len"`  // key 长度, 如果要配合 AES 则需要使用 16|24|32
-	SaltHex string `json:"salt_hex"` // 盐, 不要重复使用, 每次生成新的盐
+	Version int    `json:"version"` // argon2 version
+	Memory  uint32 `json:"memory"`  // KB
+	Time    uint32 `json:"time"`    // iterations, 迭代次数
+	Threads uint8  `json:"threads"` // 并行计算数量
+	KeyLen  uint32 `json:"key_len"` // key 长度, 如果要配合 AES 则需要使用 16|24|32
+	SaltHex string `json:"salt"`    // 盐, 不要重复使用, 每次生成新的盐
 }
 
 // 盐的长度 16 足够

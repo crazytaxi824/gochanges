@@ -1,1 +1,1 @@
-{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt_hex":"f0a502c801e7fc46d3698efba1b13ffb"},"aes_gcm":{"cipher":"706a986715a4b50f5e94708130ee34ee4847bebb3dd45ab90bea1d372e2bd22c7c72b4e8db6e188480cc1f06c9258cdf6fa08b2fd89f47c3390b17cdcedc"}}
+{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"f0a502c801e7fc46d3698efba1b13ffb"},"aes":{"algo":"GCM","cipher":"706a986715a4b50f5e94708130ee34ee4847bebb3dd45ab90bea1d372e2bd22c7c72b4e8db6e188480cc1f06c9258cdf6fa08b2fd89f47c3390b17cdcedc"}}

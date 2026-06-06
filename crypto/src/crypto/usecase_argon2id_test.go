@@ -14,13 +14,14 @@ import (
 	"local/src/crypto"
 )
 
-type aes_gcm struct {
-	Cipher string `json:"cipher"`
+type aes struct {
+	Algorithm string `json:"algo"`
+	CipherHex string `json:"cipher"`
 }
 
 type record struct {
 	Argon2id *crypto.Argon2Params `json:"argon2id"`
-	AES_GCM  aes_gcm              `json:"aes_gcm"`
+	AES      aes                  `json:"aes"`
 }
 
 func (r record) String() string {
@@ -56,8 +57,9 @@ func TestMixEncrypt2(t *testing.T) {
 
 	r := record{
 		Argon2id: p,
-		AES_GCM: aes_gcm{
-			Cipher: hex.EncodeToString(cipherBytes),
+		AES: aes{
+			Algorithm: "GCM",
+			CipherHex: hex.EncodeToString(cipherBytes),
 		},
 	}
 	fmt.Println(r)
@@ -81,7 +83,7 @@ func TestMixDecrypt2(t *testing.T) {
 	}
 
 	// 密文
-	cipher, _ := hex.DecodeString(rec.AES_GCM.Cipher)
+	cipher, _ := hex.DecodeString(rec.AES.CipherHex)
 	plaintext, err := crypto.AESGCMDecrypt(cipher, key)
 	if err != nil {
 		t.Error(err)
