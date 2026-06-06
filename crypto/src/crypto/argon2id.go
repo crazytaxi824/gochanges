@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"io"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -26,7 +27,7 @@ func Argon2id(password []byte, params *Argon2Params) (key []byte, env *Argon2Par
 	if params.SaltHex == "" {
 		// 生成随机 salt
 		salt = make([]byte, saltLen)
-		if _, err = rand.Read(salt); err != nil {
+		if _, err = io.ReadFull(rand.Reader, salt); err != nil {
 			return nil, nil, err
 		}
 	} else {
