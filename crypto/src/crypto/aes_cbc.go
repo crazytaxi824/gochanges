@@ -51,42 +51,48 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 }
 
 // 加密
-func AESCBCEncrypt(plaintext, key []byte) (ciphertext, iv []byte, err error) {
+func AESCBCEncrypt(plaintext, key []byte) (ciphertext []byte, err error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// 创建一个随机初始化向量 (IV), 长度必须为 BlockSize (16bytes) 固定值
 	// NOTE: IV 必须每次不同.
-	iv, err = RandomBytes(block.BlockSize())
+	iv, err := RandomBytes(block.BlockSize())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// data after padding
 	paddedText := pkcs7Pad(plaintext, block.BlockSize())
 
 	// 使用 AES-CBC 模式进行加密
-	ciphertext = make([]byte, len(paddedText))
+	out := make([]byte, len(paddedText))
 	encrypter := cipher.NewCBCEncrypter(block, iv)
-	encrypter.CryptBlocks(ciphertext, paddedText)
+	encrypter.CryptBlocks(out, paddedText)
 
-	return ciphertext, iv, nil
+	// concat iv+out
+	ciphertext = append(ciphertext, iv...)
+	ciphertext = append(ciphertext, out...)
+	return ciphertext, nil
 }
 
 // 必须要知道 IV 才能正确解密.
-func AESCBCDecrypt(ciphertext, iv, key []byte) (plaintext []byte, err error) {
+func AESCBCDecrypt(ciphertext, key []byte) (plaintext []byte, err error) {
 	// 创建一个 AES 块密码
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
+	bsize := block.BlockSize()
+	iv, encryptedData := ciphertext[:bsize], ciphertext[bsize:]
+
 	// 解密
-	paddedText := make([]byte, len(ciphertext))
+	paddedText := make([]byte, len(encryptedData))
 	decrypter := cipher.NewCBCDecrypter(block, iv)
-	decrypter.CryptBlocks(paddedText, ciphertext)
+	decrypter.CryptBlocks(paddedText, encryptedData)
 
 	// unpad data
 	return pkcs7Unpad(paddedText, block.BlockSize())

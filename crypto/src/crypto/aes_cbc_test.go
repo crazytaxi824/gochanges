@@ -18,19 +18,18 @@ func TestAESexample(t *testing.T) {
 	key, _ := RandomBytes(32)
 
 	// 要加密的数据
-	plaintext := []byte("this is a AES test!!!")
+	plaintext := []byte("this is a AES CBC test!!!")
 
 	// 加密
-	ciphertext, iv, err := AESCBCEncrypt(plaintext, key)
+	ciphertext, err := AESCBCEncrypt(plaintext, key)
 	if err != nil {
 		t.Log(err)
 		return
 	}
-	t.Log(hex.EncodeToString(iv))
 	t.Log(hex.EncodeToString(ciphertext))
 
 	// 解密
-	plaintext2, err := AESCBCDecrypt(ciphertext, iv, key)
+	plaintext2, err := AESCBCDecrypt(ciphertext, key)
 	if err != nil {
 		t.Log(err)
 		return
