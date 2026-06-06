@@ -48,8 +48,22 @@ func TestMixEncrypt2(t *testing.T) {
 		return
 	}
 
+	algo := "CBC"
+
 	// AES encrypt
-	cipherBytes, err := crypto.AESGCMEncrypt(plaintext, key)
+	var cipherBytes []byte
+	switch algo {
+	case "GCM":
+		cipherBytes, err = crypto.AESGCMEncrypt(plaintext, key)
+	case "CTR":
+		cipherBytes, err = crypto.AESCTREncrypt(plaintext, key)
+	case "CBC":
+		cipherBytes, err = crypto.AESCBCEncrypt(plaintext, key)
+	default:
+		t.Error("algo error:", algo)
+		return
+	}
+
 	if err != nil {
 		t.Error(err)
 		return
@@ -58,7 +72,7 @@ func TestMixEncrypt2(t *testing.T) {
 	r := record{
 		Argon2id: p,
 		AES: aes{
-			Algorithm: "GCM",
+			Algorithm: algo,
 			CipherHex: hex.EncodeToString(cipherBytes),
 		},
 	}
@@ -84,10 +98,24 @@ func TestMixDecrypt2(t *testing.T) {
 
 	// 密文
 	cipher, _ := hex.DecodeString(rec.AES.CipherHex)
-	plaintext, err := crypto.AESGCMDecrypt(cipher, key)
+
+	var plaintext []byte
+	switch rec.AES.Algorithm {
+	case "GCM":
+		plaintext, err = crypto.AESGCMDecrypt(cipher, key)
+	case "CTR":
+		plaintext, err = crypto.AESCTRDecrypt(cipher, key)
+	case "CBC":
+		plaintext, err = crypto.AESCBCDecrypt(cipher, key)
+	default:
+		t.Error("algo error:", rec.AES.Algorithm)
+		return
+	}
+
 	if err != nil {
 		t.Error(err)
 		return
 	}
+
 	t.Log(string(plaintext))
 }
