@@ -32,12 +32,13 @@ func AESCTREncrypt(plaintext, key []byte) (ciphertext []byte, err error) {
 }
 
 func AESCTRDecrypt(ciphertext, key []byte) (plaintext []byte, err error) {
-	iv, encryptedData := ciphertext[:16], ciphertext[16:]
-
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
+
+	bsize := block.BlockSize()
+	iv, encryptedData := ciphertext[:bsize], ciphertext[bsize:]
 
 	// CTR 模式的 IV 必须是 16 字节
 	stream := cipher.NewCTR(block, iv)
