@@ -3,6 +3,7 @@ package crypto_test
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io"
 	mrand "math/rand/v2"
 	"testing"
@@ -21,10 +22,14 @@ func randBytes(size int) ([]byte, error) {
 	return randByts, nil
 }
 
-func Encode(data []byte, blockSize int) ([]byte, error) {
+func Encode(data []byte, fmtSize int) ([]byte, error) {
+	if fmtSize < 3 {
+		return nil, fmt.Errorf("size is too small: %d", fmtSize)
+	}
+
 	res := make([]byte, 0)
 	for _, v := range data {
-		prefix, err := randBytes(blockSize - 1)
+		prefix, err := randBytes(fmtSize - 1)
 		if err != nil {
 			return nil, err
 		}
@@ -33,7 +38,7 @@ func Encode(data []byte, blockSize int) ([]byte, error) {
 		res = append(res, p...)
 	}
 
-	suffix, err := randBytes(mrand.IntN(blockSize - 2))
+	suffix, err := randBytes(mrand.IntN(fmtSize - 2))
 	if err != nil {
 		return nil, err
 	}
@@ -42,20 +47,24 @@ func Encode(data []byte, blockSize int) ([]byte, error) {
 	return res, nil
 }
 
-func Decode(enc []byte, blockSize int) []byte {
+func Decode(enc []byte, fmtSize int) ([]byte, error) {
+	if fmtSize < 3 {
+		return nil, fmt.Errorf("size is too small: %d", fmtSize)
+	}
+
 	res := make([]byte, 0)
 	i := 0
-	for i+blockSize <= len(enc) {
-		res = append(res, enc[i+blockSize-1]) // 每段最后一个字节
-		i += blockSize
+	for i+fmtSize <= len(enc) {
+		res = append(res, enc[i+fmtSize-1]) // 每段最后一个字节
+		i += fmtSize
 	}
-	return res
+	return res, nil
 }
 
 func TestByteFormat(t *testing.T) {
 	fSize := 6
 
-	src := []byte("SNUDfdshhkhuHFUDIHSFUI")
+	src := []byte("ABCDEFGHIJK")
 	enc, err := Encode(src, fSize)
 	if err != nil {
 		t.Error(err)
@@ -64,7 +73,12 @@ func TestByteFormat(t *testing.T) {
 
 	// t.Log(string(enc))
 
-	dec := Decode(enc, fSize)
+	dec, err := Decode(enc, fSize)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	if !bytes.Equal(src, dec) {
 		t.Error("Not Equal")
 	}

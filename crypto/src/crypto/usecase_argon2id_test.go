@@ -102,8 +102,7 @@ func Argon2AESDecrypt(password []byte, rec *record, fmtSize int) ([]byte, error)
 		return nil, err
 	}
 
-	dec := Decode(plaintext, fmtSize)
-	return dec, nil
+	return Decode(plaintext, fmtSize)
 }
 
 func TestArgon2AESEncrypt(t *testing.T) {
