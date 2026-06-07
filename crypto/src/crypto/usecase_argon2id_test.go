@@ -32,7 +32,7 @@ func (r record) String() string {
 	return string(je)
 }
 
-func Argon2MixEncrypt(password, plaintext []byte, params *crypto.Argon2Params, algo string) (*record, error) {
+func Argon2AESEncrypt(password, plaintext []byte, params *crypto.Argon2Params, algo string) (*record, error) {
 	key, p, err := crypto.Argon2id(password, params)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func Argon2MixEncrypt(password, plaintext []byte, params *crypto.Argon2Params, a
 	return &r, nil
 }
 
-func Argon2MixDecrypt(password []byte, rec *record) ([]byte, error) {
+func Argon2AESDecrypt(password []byte, rec *record) ([]byte, error) {
 	key, _, err := crypto.Argon2id(password, rec.Argon2id)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func Argon2MixDecrypt(password []byte, rec *record) ([]byte, error) {
 	return plaintext, nil
 }
 
-func TestArgon2MixEncrypt(t *testing.T) {
+func TestArgon2AESEncrypt(t *testing.T) {
 	password := []byte("password")
 	plaintext := []byte("this is a AES test!!!")
 
@@ -105,9 +105,9 @@ func TestArgon2MixEncrypt(t *testing.T) {
 		KeyLen:  32, // key 长度, 如果要配合 AES 则需要使用 16|24|32
 	}
 
-	algo := "CBC"
+	algo := "CTR"
 
-	r, err := Argon2MixEncrypt(password, plaintext, params, algo)
+	r, err := Argon2AESEncrypt(password, plaintext, params, algo)
 	if err != nil {
 		t.Error(err)
 		return
@@ -116,9 +116,9 @@ func TestArgon2MixEncrypt(t *testing.T) {
 	fmt.Println(r)
 }
 
-func TestArgon2MixDecrypt(t *testing.T) {
+func TestArgon2AESDecrypt(t *testing.T) {
 	password := []byte("password")
-	je := `{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"db27b118f2a912259c23d795b420640e"},"aes":{"algo":"CBC","cipher":"5a688c480adb43148ec8c53288c67ca356ad60d3089dcef32dc5deb501e0cabd5ece4321afdb89efe25d3412f65c87a6"}}`
+	je := `{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"75db9c7f0cb06c3962153c0abe0748d3"},"aes":{"algo":"CTR","cipher":"00e12fa382a04cf4f034087b710d80f963e6690586d8f809674a42676fdec1cde99651e8f7"}}`
 
 	var rec record
 	err := json.Unmarshal([]byte(je), &rec)
@@ -127,7 +127,7 @@ func TestArgon2MixDecrypt(t *testing.T) {
 		return
 	}
 
-	plaintext, err := Argon2MixDecrypt(password, &rec)
+	plaintext, err := Argon2AESDecrypt(password, &rec)
 	if err != nil {
 		t.Error(err)
 		return
