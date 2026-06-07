@@ -23,16 +23,16 @@ func usecase(t ITesting, password, plain_orig []byte, algo string) {
 		KeyLen:  32, // key 长度, 如果要配合 AES 则需要使用 16|24|32
 	}
 
-	l := 6
+	fSize := 6
 
-	rec, err := Argon2AESEncrypt(password, plain_orig, params, algo, l)
+	rec, err := Argon2AESEncrypt(password, plain_orig, params, algo, fSize)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	// 解密
-	plain_dec, err := Argon2AESDecrypt(password, rec, l)
+	plain_dec, err := Argon2AESDecrypt(password, rec, fSize)
 	if err != nil {
 		t.Error(err)
 		return

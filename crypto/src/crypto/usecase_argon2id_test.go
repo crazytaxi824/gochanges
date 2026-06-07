@@ -32,13 +32,13 @@ func (r record) String() string {
 	return string(je)
 }
 
-func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, algo string, blockSize int) (*record, error) {
+func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, algo string, fmtSize int) (*record, error) {
 	key, p, err := crypto.Argon2id(password, params)
 	if err != nil {
 		return nil, err
 	}
 
-	enc, err := Encode(plainBytes, blockSize)
+	enc, err := Encode(plainBytes, fmtSize)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, 
 	return &r, nil
 }
 
-func Argon2AESDecrypt(password []byte, rec *record, blockSize int) ([]byte, error) {
+func Argon2AESDecrypt(password []byte, rec *record, fmtSize int) ([]byte, error) {
 	key, _, err := crypto.Argon2id(password, rec.Argon2id)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func Argon2AESDecrypt(password []byte, rec *record, blockSize int) ([]byte, erro
 		return nil, err
 	}
 
-	dec := Decode(plaintext, blockSize)
+	dec := Decode(plaintext, fmtSize)
 	return dec, nil
 }
 
@@ -105,7 +105,7 @@ func TestArgon2AESEncrypt(t *testing.T) {
 	password := []byte("password")
 	plaintext := []byte("this is a AES test!!!")
 	algo := "CTR"
-	eSize := 6
+	fSize := 6
 
 	params := &crypto.Argon2Params{
 		Memory:  256 * 1024, // KB
@@ -114,7 +114,7 @@ func TestArgon2AESEncrypt(t *testing.T) {
 		KeyLen:  32, // key 长度, 如果要配合 AES 则需要使用 16|24|32
 	}
 
-	r, err := Argon2AESEncrypt(password, plaintext, params, algo, eSize)
+	r, err := Argon2AESEncrypt(password, plaintext, params, algo, fSize)
 	if err != nil {
 		t.Error(err)
 		return
@@ -126,7 +126,7 @@ func TestArgon2AESEncrypt(t *testing.T) {
 func TestArgon2AESDecrypt(t *testing.T) {
 	password := []byte("password")
 	je := `{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"527404a60f1c5580742d610262dec624"},"aes":{"algo":"CTR","cipher":"9e282c7c42bdab28182a7ee2961ef205b201e186c2dc75e22e2bc84b15fb3037595c926c090a4f046462fe6998c0c194b6f82a02c4438667b04492bbc4c60bba36eae5fee6ff2eac3f9c576118d43f5163363d05febf0893f9dc907ef6e14ef85cda2309e23868afec43e4fb1d42427315f5bd9557820a2571ec4bacc6951ef55da62d3c0001e4e0312c4a2a0341"}}`
-	eSize := 6
+	fSize := 6
 
 	var rec record
 	err := json.Unmarshal([]byte(je), &rec)
@@ -135,7 +135,7 @@ func TestArgon2AESDecrypt(t *testing.T) {
 		return
 	}
 
-	plaintext, err := Argon2AESDecrypt(password, &rec, eSize)
+	plaintext, err := Argon2AESDecrypt(password, &rec, fSize)
 	if err != nil {
 		t.Error(err)
 		return
