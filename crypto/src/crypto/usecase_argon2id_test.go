@@ -20,8 +20,8 @@ type aes struct {
 }
 
 type record struct {
-	Argon2id *crypto.Argon2Params `json:"argon2id"`
-	AES      aes                  `json:"aes"`
+	Argon2id *crypto.Argon2Env `json:"argon2id"`
+	AES      aes               `json:"aes"`
 }
 
 func (r record) String() string {
@@ -33,7 +33,7 @@ func (r record) String() string {
 }
 
 func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, algo string, fmtSize int) (*record, error) {
-	key, p, err := crypto.Argon2id(password, params)
+	key, env, err := crypto.Argon2id(password, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, 
 	}
 
 	r := record{
-		Argon2id: p,
+		Argon2id: env,
 		AES: aes{
 			Algorithm: algo,
 			CipherHex: hex.EncodeToString(cipherBytes),
@@ -71,7 +71,12 @@ func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, 
 }
 
 func Argon2AESDecrypt(password []byte, rec *record, fmtSize int) ([]byte, error) {
-	key, _, err := crypto.Argon2id(password, rec.Argon2id)
+	salt, err := hex.DecodeString(rec.Argon2id.SaltHex)
+	if err != nil {
+		return nil, err
+	}
+
+	key, _, err := crypto.Argon2id(password, &rec.Argon2id.Argon2Params, salt)
 	if err != nil {
 		return nil, err
 	}

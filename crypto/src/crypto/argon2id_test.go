@@ -1,6 +1,7 @@
 package crypto_test
 
 import (
+	"bytes"
 	"encoding/hex"
 	"testing"
 
@@ -18,18 +19,18 @@ func TestArgon2(t *testing.T) {
 	password := []byte("password")
 
 	// 生成哈希
-	_, params, err := crypto.Argon2id(password, defaultParams)
+	_, env, err := crypto.Argon2id(password, defaultParams, nil)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	t.Logf("%v", params)
+	t.Logf("%v", env)
 }
 
 func TestArgon2KeyVarify(t *testing.T) {
 	password := []byte("password")
 
-	p := &crypto.Argon2Params{
+	params := &crypto.Argon2Params{
 		Memory:  256 * 1024, // KB
 		Time:    12,         // iterations
 		Threads: 4,
@@ -37,23 +38,27 @@ func TestArgon2KeyVarify(t *testing.T) {
 	}
 
 	// 生成哈希
-	key1, params, err := crypto.Argon2id(password, p)
+	key1, env, err := crypto.Argon2id(password, params, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	salt, err := hex.DecodeString(env.SaltHex)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	// 生成哈希
-	key2, _, err := crypto.Argon2id(password, params)
+	key2, _, err := crypto.Argon2id(password, &env.Argon2Params, salt)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if hex.EncodeToString(key1) != hex.EncodeToString(key2) {
+	if !bytes.Equal(key1, key2) {
 		t.Error("keys are not match")
-	} else {
-		t.Log("keys are match")
 	}
 }
 
@@ -68,7 +73,7 @@ func BenchmarkArgon2(b *testing.B) {
 
 	for b.Loop() {
 		// code
-		_, _, err := crypto.Argon2id(password, params)
+		_, _, err := crypto.Argon2id(password, params, nil)
 		if err != nil {
 			b.Error(err)
 			return
