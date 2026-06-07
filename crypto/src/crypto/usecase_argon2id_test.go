@@ -32,23 +32,11 @@ func (r record) String() string {
 	return string(je)
 }
 
-func TestMixEncrypt2(t *testing.T) {
-	password := []byte("password")
-	plaintext := []byte("this is a AES test!!!")
-
-	params := &crypto.Argon2Params{
-		Memory:  256 * 1024, // KB
-		Time:    16,         // iterations
-		Threads: 4,
-		KeyLen:  32, // key 长度, 如果要配合 AES 则需要使用 16|24|32
-	}
+func Argon2MixEncrypt(password, plaintext []byte, params *crypto.Argon2Params, algo string) (*record, error) {
 	key, p, err := crypto.Argon2id(password, params)
 	if err != nil {
-		t.Error(err)
-		return
+		return nil, err
 	}
-
-	algo := "CBC"
 
 	// AES encrypt
 	var cipherBytes []byte
@@ -60,13 +48,11 @@ func TestMixEncrypt2(t *testing.T) {
 	case "CBC":
 		cipherBytes, err = crypto.AESCBCEncrypt(plaintext, key)
 	default:
-		t.Error("algo error:", algo)
-		return
+		return nil, fmt.Errorf("algo error: %s", algo)
 	}
 
 	if err != nil {
-		t.Error(err)
-		return
+		return nil, err
 	}
 
 	r := record{
@@ -76,24 +62,14 @@ func TestMixEncrypt2(t *testing.T) {
 			CipherHex: hex.EncodeToString(cipherBytes),
 		},
 	}
-	fmt.Println(r)
+
+	return &r, nil
 }
 
-func TestMixDecrypt2(t *testing.T) {
-	password := []byte("password")
-	je := `{argon2id & cipher to decode}`
-
-	var rec record
-	err := json.Unmarshal([]byte(je), &rec)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
+func Argon2MixDecrypt(password []byte, rec *record) ([]byte, error) {
 	key, _, err := crypto.Argon2id(password, rec.Argon2id)
 	if err != nil {
-		t.Error(err)
-		return
+		return nil, err
 	}
 
 	// 密文
@@ -108,10 +84,50 @@ func TestMixDecrypt2(t *testing.T) {
 	case "CBC":
 		plaintext, err = crypto.AESCBCDecrypt(cipher, key)
 	default:
-		t.Error("algo error:", rec.AES.Algorithm)
+		return nil, fmt.Errorf("algo error: %s", rec.AES.Algorithm)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
+func TestArgon2MixEncrypt(t *testing.T) {
+	password := []byte("password")
+	plaintext := []byte("this is a AES test!!!")
+
+	params := &crypto.Argon2Params{
+		Memory:  256 * 1024, // KB
+		Time:    16,         // iterations
+		Threads: 4,
+		KeyLen:  32, // key 长度, 如果要配合 AES 则需要使用 16|24|32
+	}
+
+	algo := "CBC"
+
+	r, err := Argon2MixEncrypt(password, plaintext, params, algo)
+	if err != nil {
+		t.Error(err)
 		return
 	}
 
+	fmt.Println(r)
+}
+
+func TestArgon2MixDecrypt(t *testing.T) {
+	password := []byte("password")
+	je := `{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"db27b118f2a912259c23d795b420640e"},"aes":{"algo":"CBC","cipher":"5a688c480adb43148ec8c53288c67ca356ad60d3089dcef32dc5deb501e0cabd5ece4321afdb89efe25d3412f65c87a6"}}`
+
+	var rec record
+	err := json.Unmarshal([]byte(je), &rec)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	plaintext, err := Argon2MixDecrypt(password, &rec)
 	if err != nil {
 		t.Error(err)
 		return
