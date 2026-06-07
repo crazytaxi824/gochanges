@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 )
@@ -19,14 +20,14 @@ func RandomBytes(l int) ([]byte, error) {
 
 // AES 密钥长度只可以是16、24或32字节，分别对应AES-128、AES-192和AES-256, (1byte = 8bit, 32byte = 256bit)
 // AES 块大小（block size）始终为 16 字节（128 位），无论是 AES-128、AES-192 还是 AES-256
-// 如果 data 正好是 blockSize 的倍数, 则 PKCS#7 会在 data 最后 pad 16 个 []byte(16)
 // pkcs7Pad 对明文数据进行PKCS#7填充
 // 如需要填充 5 个数, 则为 [5]byte{5,5,5,5,5}
 // 如需要填充 3 个数, 则为 [3]byte{3,3,3}
+// 如果 data 正好是 16 的倍数, 则 PKCS#7 会在 data 最后 pad 16 个 []byte(16)
 func pkcs7Pad(data []byte, blockSize int) []byte {
-	padding := blockSize - (len(data) % blockSize)
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(data, padText...)
+	padLen := blockSize - (len(data) % blockSize)
+	padding := bytes.Repeat([]byte{byte(padLen)}, padLen)
+	return append(data, padding...)
 }
 
 // pkcs7Unpad
@@ -37,15 +38,15 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	}
 
 	// 0 < padSize <= blockSize
-	padLen := int(data[len(data)-1])
+	padLen := int(data[len(data)-1]) // data[last_byte]
 	if padLen <= 0 || padLen > blockSize {
-		return nil, errors.New("invalid padding size")
+		return nil, fmt.Errorf("invalid padding size %d", padLen)
 	}
 
 	// 验证 padding format. []byte{x,x,x,x,x,x,x,x,x,x,x,5,5,5,5,5}
 	padding := data[len(data)-padLen:]
 	if !bytes.Equal(padding, bytes.Repeat([]byte{byte(padLen)}, padLen)) {
-		return nil, errors.New("invalid PKCS7 padding")
+		return nil, fmt.Errorf("invalid PKCS7 padding %d", padLen)
 	}
 	return data[:len(data)-padLen], nil
 }
