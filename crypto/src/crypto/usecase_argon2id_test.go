@@ -32,8 +32,13 @@ func (r record) String() string {
 	return string(je)
 }
 
-func Argon2AESEncrypt(password, plaintext []byte, params *crypto.Argon2Params, algo string) (*record, error) {
+func Argon2AESEncrypt(password, plainBytes []byte, params *crypto.Argon2Params, algo string, blockSize int) (*record, error) {
 	key, p, err := crypto.Argon2id(password, params)
+	if err != nil {
+		return nil, err
+	}
+
+	enc, err := Encode(plainBytes, blockSize)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +47,14 @@ func Argon2AESEncrypt(password, plaintext []byte, params *crypto.Argon2Params, a
 	var cipherBytes []byte
 	switch algo {
 	case "GCM":
-		cipherBytes, err = crypto.AESGCMEncrypt(plaintext, key)
+		cipherBytes, err = crypto.AESGCMEncrypt(enc, key)
 	case "CTR":
-		cipherBytes, err = crypto.AESCTREncrypt(plaintext, key)
+		cipherBytes, err = crypto.AESCTREncrypt(enc, key)
 	case "CBC":
-		cipherBytes, err = crypto.AESCBCEncrypt(plaintext, key)
+		cipherBytes, err = crypto.AESCBCEncrypt(enc, key)
 	default:
 		return nil, fmt.Errorf("algo error: %s", algo)
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -66,37 +70,42 @@ func Argon2AESEncrypt(password, plaintext []byte, params *crypto.Argon2Params, a
 	return &r, nil
 }
 
-func Argon2AESDecrypt(password []byte, rec *record) ([]byte, error) {
+func Argon2AESDecrypt(password []byte, rec *record, blockSize int) ([]byte, error) {
 	key, _, err := crypto.Argon2id(password, rec.Argon2id)
 	if err != nil {
 		return nil, err
 	}
 
 	// 密文
-	cipher, _ := hex.DecodeString(rec.AES.CipherHex)
-
-	var plaintext []byte
-	switch rec.AES.Algorithm {
-	case "GCM":
-		plaintext, err = crypto.AESGCMDecrypt(cipher, key)
-	case "CTR":
-		plaintext, err = crypto.AESCTRDecrypt(cipher, key)
-	case "CBC":
-		plaintext, err = crypto.AESCBCDecrypt(cipher, key)
-	default:
-		return nil, fmt.Errorf("algo error: %s", rec.AES.Algorithm)
-	}
-
+	cipherBytes, err := hex.DecodeString(rec.AES.CipherHex)
 	if err != nil {
 		return nil, err
 	}
 
-	return plaintext, nil
+	var plaintext []byte
+	switch rec.AES.Algorithm {
+	case "GCM":
+		plaintext, err = crypto.AESGCMDecrypt(cipherBytes, key)
+	case "CTR":
+		plaintext, err = crypto.AESCTRDecrypt(cipherBytes, key)
+	case "CBC":
+		plaintext, err = crypto.AESCBCDecrypt(cipherBytes, key)
+	default:
+		return nil, fmt.Errorf("algo error: %s", rec.AES.Algorithm)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	dec := Decode(plaintext, blockSize)
+	return dec, nil
 }
 
 func TestArgon2AESEncrypt(t *testing.T) {
 	password := []byte("password")
 	plaintext := []byte("this is a AES test!!!")
+	algo := "CTR"
+	eSize := 6
 
 	params := &crypto.Argon2Params{
 		Memory:  256 * 1024, // KB
@@ -105,9 +114,7 @@ func TestArgon2AESEncrypt(t *testing.T) {
 		KeyLen:  32, // key 长度, 如果要配合 AES 则需要使用 16|24|32
 	}
 
-	algo := "CTR"
-
-	r, err := Argon2AESEncrypt(password, plaintext, params, algo)
+	r, err := Argon2AESEncrypt(password, plaintext, params, algo, eSize)
 	if err != nil {
 		t.Error(err)
 		return
@@ -118,7 +125,8 @@ func TestArgon2AESEncrypt(t *testing.T) {
 
 func TestArgon2AESDecrypt(t *testing.T) {
 	password := []byte("password")
-	je := `{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"75db9c7f0cb06c3962153c0abe0748d3"},"aes":{"algo":"CTR","cipher":"00e12fa382a04cf4f034087b710d80f963e6690586d8f809674a42676fdec1cde99651e8f7"}}`
+	je := `{"argon2id":{"version":19,"memory":262144,"time":16,"threads":4,"key_len":32,"salt":"527404a60f1c5580742d610262dec624"},"aes":{"algo":"CTR","cipher":"9e282c7c42bdab28182a7ee2961ef205b201e186c2dc75e22e2bc84b15fb3037595c926c090a4f046462fe6998c0c194b6f82a02c4438667b04492bbc4c60bba36eae5fee6ff2eac3f9c576118d43f5163363d05febf0893f9dc907ef6e14ef85cda2309e23868afec43e4fb1d42427315f5bd9557820a2571ec4bacc6951ef55da62d3c0001e4e0312c4a2a0341"}}`
+	eSize := 6
 
 	var rec record
 	err := json.Unmarshal([]byte(je), &rec)
@@ -127,7 +135,7 @@ func TestArgon2AESDecrypt(t *testing.T) {
 		return
 	}
 
-	plaintext, err := Argon2AESDecrypt(password, &rec)
+	plaintext, err := Argon2AESDecrypt(password, &rec, eSize)
 	if err != nil {
 		t.Error(err)
 		return
