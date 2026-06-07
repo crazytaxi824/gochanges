@@ -4,6 +4,7 @@
 package crypto_test
 
 import (
+	"bytes"
 	"crypto/mlkem"
 	"encoding/hex"
 	"testing"
@@ -30,7 +31,9 @@ func TestMlkem(t *testing.T) {
 		t.Log(err)
 		return
 	}
-	t.Log(hex.EncodeToString(pkByte) == hex.EncodeToString(pk.Bytes())) // true
+	if !bytes.Equal(pkByte, pk.Bytes()) {
+		t.Error("pk bytes not Equal")
+	}
 
 	// 通过 public key 生成 cipher, 和 shared key.
 	// 就算 cipher 也泄漏了, 同样无法恢复出 shared key.
