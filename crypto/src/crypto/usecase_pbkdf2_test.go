@@ -12,15 +12,14 @@ import (
 	"local/src/crypto"
 )
 
-func TestMixEncrypt(t *testing.T) {
+func TestPdkdf2MixEncrypt(t *testing.T) {
 	// 生成 key
 	password := "password"
+	plaintext := []byte("this is a AES test!!!")
+
 	salt, _ := crypto.RandomBytes(32) // 推荐长度 > 16-bytes, 保证唯一性
 	iter := 1000000                   // 迭代次数, 增加暴力破解难度
 	keyLen := 32                      // 生成密钥长度
-
-	// 明文, 需要加密
-	plaintext := []byte("this is a AES test!!!")
 
 	// pbkdf2 gen key
 	key, err := pbkdf2.Key(sha3.New512, password, salt, iter, keyLen)
@@ -46,7 +45,7 @@ func TestMixEncrypt(t *testing.T) {
 	fmt.Printf("cipher: %s\n", hex.EncodeToString(ciphertext)) // 记录 cipher text
 }
 
-func TestMixDecrypt(t *testing.T) {
+func TestPdkdf2MixDecrypt(t *testing.T) {
 	// 生成 key
 	password := "password"
 	salt, _ := hex.DecodeString("salt hex")
