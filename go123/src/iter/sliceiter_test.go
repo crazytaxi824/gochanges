@@ -9,7 +9,7 @@ import (
 func TestSlice(t *testing.T) {
 	names := []string{"Alice", "Bob", "Vera"}
 
-	// Seq2
+	// Seq2  [K,V]
 	for i, v := range slices.All(names) {
 		t.Log(i, v)
 	}
@@ -19,7 +19,7 @@ func TestSlice(t *testing.T) {
 		t.Log(v)
 	}
 
-	// Seq2
+	// Seq2  [K,V]
 	for k, v := range slices.Backward(names) {
 		t.Log(k, v)
 	}
@@ -47,10 +47,13 @@ func TestAppendSeq(t *testing.T) {
 func TestAppendSeq2(t *testing.T) {
 	a := []int{1, 2, 3}
 	b := []int{4, 5, 6}
+
+	// concat and flatten
 	c := slices.AppendSeq(a, slices.Values(b))
 	t.Log(a, b)
 	t.Log(c)
 
+	// concat and flatten
 	d := slices.Concat(a, b)
 	t.Log(a, b)
 	t.Log(d)
