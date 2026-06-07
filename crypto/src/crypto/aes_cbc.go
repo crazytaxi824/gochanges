@@ -74,8 +74,7 @@ func AESCBCEncrypt(plaintext, key []byte) (ciphertext []byte, err error) {
 	encrypter.CryptBlocks(out, paddedText)
 
 	// concat iv+out
-	ciphertext = append(ciphertext, iv...)
-	ciphertext = append(ciphertext, out...)
+	ciphertext = append(iv, out...)
 	return ciphertext, nil
 }
 

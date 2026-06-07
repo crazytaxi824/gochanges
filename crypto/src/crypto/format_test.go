@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	mrand "math/rand/v2"
+	"slices"
 	"testing"
 )
 
@@ -34,8 +35,7 @@ func Encode(data []byte, fmtSize int) ([]byte, error) {
 			return nil, err
 		}
 
-		p := append(prefix, v)
-		res = append(res, p...)
+		res = slices.Concat(res, prefix, []byte{v})
 	}
 
 	suffix, err := randBytes(mrand.IntN(fmtSize - 2))
