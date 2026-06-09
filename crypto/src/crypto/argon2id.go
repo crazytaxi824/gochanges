@@ -22,7 +22,9 @@ type Argon2Env struct {
 	SaltHex string `json:"salt"` // 盐, 不要重复使用, 每次生成新的盐
 }
 
-// 盐的长度 16 足够
+// NOTE: Salt 长度不能小于 8, 长度 16 足够对抗彩虹表.
+// 将 Salt 长度增加到 24 字节不会提升安全性, Argon2id 内部会对输入的 Salt 进行哈希处理,
+// 所以增加 Salt 长度不会增加密码验证的时间.
 const saltLen = 16
 
 // Argon2id 使用 Argon2id 生成哈希并以可移植字符串返回
