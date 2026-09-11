@@ -5,6 +5,16 @@ import (
 	"testing"
 )
 
+func TestFormKeyXMLFile(t *testing.T) {
+	val := sha256.Sum256([]byte("456"))
+	xmlByts, err := FormatKeepassKeyFile(val[:])
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	t.Log(string(xmlByts))
+}
+
 func TestParseKeyFile(t *testing.T) {
 	keyFilepath := "~/test.txt"
 
