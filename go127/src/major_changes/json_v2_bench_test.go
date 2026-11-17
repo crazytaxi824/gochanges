@@ -2,9 +2,8 @@ package generic_test
 
 import (
 	jsonv1 "encoding/json"
-	"testing"
-
 	jsonv2 "encoding/json/v2"
+	"testing"
 )
 
 type Address struct {
