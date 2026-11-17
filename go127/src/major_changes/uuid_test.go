@@ -1,8 +1,7 @@
-package generic_test
+package majorchanges_test
 
 import (
 	"testing"
-
 	"uuid"
 )
 

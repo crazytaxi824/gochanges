@@ -1,4 +1,4 @@
-package generic_test
+package majorchanges_test
 
 import (
 	"encoding/json/jsontext"
